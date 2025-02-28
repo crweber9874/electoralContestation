@@ -1,0 +1,666 @@
+---
+title: "Building a Electoral Contestation Survey Repository"
+output: html_document
+---
+
+If you set your own $\texttt{Sys.setenv("OPENAI_API_KEY" = "")$ you can use copilot's code completion. Otherwise, I just connect to the Dropbox folder on my computer, and read in the files, I then recode some common variables.
+
+## AVP 2023, AVP Wave 1
+## Sample Description 
+
+**Sampling Frame**: Voters in the 2022 Election
+
+YouGov recruited a representative sample of n=1000 Arizona resident adults to complete the survey. The respondents were matched to a sampling frame based on gender, age, race, and education. This sampling frame is intended to serve as a politically representative sample of Arizona registered voters, constructed from the American Community Survey (ACS) public use microdata file, public voter file records, the 2020 Current Population Survey (CPS) Voting and Registration supplements, the 2020 National Election Pool (NEP) exit poll, and the 2020 CES surveys, including demographics and 2020 presidential vote.
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(readstata13)
+library(haven)
+library(tidyverse)
+library(chattr)
+library(dplyr)
+devtools::load_all()
+# Sys.setenv("OPENAI_API_KEY" = "")
+# The key will not be shown in the repository, just your local .renv environment.
+setwd("/Users/Chris/Dropbox/electoral_contestation-main/Data Repository/")
+
+wss20 <- read.dta13("2020 WSS.dta")
+cesASU <- read.dta13("2022 CES ASU.dta")
+cesBYU <- read.dta13("2022 CES BYU.dta")
+wss24 <- read.dta13("2024 WSS.dta")
+avp23 <- read_sav("UARZ0003_OUTPUT.sav")
+avp24 <- read_sav("UARZ0004_OUTPUT.sav")
+```
+
+Recode each data set with a minimal set of common demographic variables.
+
+```{r}
+original_columns <- names(avp23)
+avp23 <- avp23 %>%
+  # common variables
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2022 - as.numeric(birthyr),
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         female = ifelse(as.numeric(gender) == 2, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8, 1, 0),
+         survey_weight = weight,
+         county_fips = as.numeric(county_AZ),
+         CD = as.numeric(cd),
+         LD = as.numeric(LD_upper),
+         zipcode = as.numeric(inputzip),
+         caseID = caseid, #By whatever is in the data,
+         state = "4",
+         year = 2023,
+         survey = "avpw1"
+         )
+head(avp23)
+```        
+
+I created some functions in the package to avoid repetitive code -- particularly when recoding survey items that follow a common set of response categories.  These are in the $\texttt{/R}$ folder. Some are utilities and denoted $\texttt{util_}$. In any case, here's how I recoded the 2023 AVP data file.
+
+```{r}
+recode_rules <- list(
+  list(column = "presvote20post", recode_rules = c("1" = 0, "2" = 1), new_column = "presvote_trump_2020"),
+  list(column = "vote_2020", recode_rules = c("1" = 1, "2" = 0), new_column = "voted"),
+  list(column = "MIP", recode_rules = c(
+    "1" = "economy",
+    "2" = "climate/environment",
+    "3" = "healthcare",
+    "4" = "racism",
+    "5" = "terrorism",
+    "6" = "abortion",
+    "7" = "crime",
+    "8" = "poverty",
+    "9" = "national security",
+    "10" = "education",
+    "11" = "democracy",
+    "12" = "other"
+  ), new_column = "mip"),
+  list(column = "contestation1", recode_rules = five_r, new_column = "attend_march"),
+  list(column = "contestation2", recode_rules = five_r, new_column = "criticize_election"),
+  list(column = "contestation3", recode_rules = five_r, new_column = "burn_flag"),
+  list(column = "contestation4", recode_rules = five_r, new_column = "recount"),
+  list(column = "contestation5", recode_rules = five_r, new_column = "court"),
+  list(column = "contestation6", recode_rules = five_r, new_column = "certify"),
+  list(column = "contestation7", recode_rules = five_r, new_column = "concede"),
+  list(column = "contestation8", recode_rules = five_r, new_column = "state_certify"),
+  list(column = "contestation9", recode_rules = five_r, new_column = "violent"),
+  list(column = "contestation10", recode_rules = five_r, new_column = "new_election"),
+  list(column = "steal_2020", recode_rules = five_r, new_column = "stolen_2020"),
+  list(column = "free_and_fair", recode_rules = five_r, new_column = "free_and_fair"),
+  list(column = "vote_confidence", recode_rules = five_r, new_column = "vote_confidence"),
+  list(column = "auth1", recode_rules = c("1" = 0, "2" = 1), new_column = "auth_1"),
+  list(column = "auth2", recode_rules = c("1" = 0, "2" = 1), new_column = "auth_2"),
+  list(column = "auth3", recode_rules = c("1" = 1, "2" = 0), new_column = "auth_3"),
+  list(column = "auth4", recode_rules = c("1" = 0, "2" = 1), new_column = "auth_4"),
+  list(column = "rr1", recode_rules = four_n, new_column = "rr1"),
+  list(column = "rr2", recode_rules = four_r, new_column = "rr2"),
+  list(column = "rr3", recode_rules = four_r, new_column = "rr3"),
+  list(column = "rr4", recode_rules = four_r, new_column = "rr4"),
+  list(column = "pid7", recode_rules = c(
+    "1" = 1, "2" = 1, "3" = 1, "4" = 2, "5" = 3, "6" = 3, "7" = 3
+  ), new_column = "party3"),
+  list(column = "religpew", recode_rules = c(
+    "1" = 1, "2" = 1, "3" = 1, "4" = 1, "5" = 0, "6" = 0, "7" = 0,
+    "8" = 0, "9" = 0, "10" = 0, "11" = 0, "12" = 0
+  ), new_column = "christian"),
+  list(column = "presvote16post", recode_rules = c("1" = 0, "2" = 0), 
+       new_column = "presvote_trump_2016"),
+  list(column = "ideo5", 
+       recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5), 
+       new_column = "ideo5")
+)
+
+avp23 <- recodeList(avp23, recode_rules)
+new_columns <- names(avp23)
+new_columns <- setdiff(new_columns, original_columns)
+
+# Extract the recoded columns
+avp23 <- avp23 %>% select(all_of(new_columns))
+```
+## The 2024 AVP Data, Wave II (*n* = 803; *n$_{recontact}$* = 403)
+### Description
+
+**Sampling Frame**: Voters in the 2022 Election, including 403 recontacts from Wave I
+
+YouGov interviewed 865 respondents and matched them down to a sample of 803 for the final dataset. Of these 803 respondents, 403 were recontacted from a previous study conducted between December 14, 2022, and December 28, 2022, AVP Wave 1. The remaining new respondents were matched to a sampling frame based on gender, age, race, and education. This sampling frame is intended to serve as a politically representative sample of Arizona registered voters, constructed from the American Community Survey (ACS) public use microdata file, public voter file records, the 2020 Current Population Survey (CPS) Voting and Registration supplements, the 2020 National Election Pool (NEP) exit poll, and the 2020 CES surveys, including demographics and 2020 presidential vote.
+
+The matched cases were weighted to the sampling frame using propensity scores. A logistic regression was estimated for inclusion in the frame by combining the matched cases and the frame. The propensity score function included age, gender, race/ethnicity, years of education, and region. The propensity scores were grouped into deciles of the estimated propensity score in the frame and post-stratified according to these deciles. The weights were then post-stratified based on the 2020 presidential vote choice and a four-way stratification of gender, age (4 categories), race (4 categories), and education (4 categories) to produce the final weight.
+
+```{r}
+original_columns <- names(avp24)
+
+avp24 <- avp24 %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2022 - as.numeric(birthyr),
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8, 1, 0),
+         survey_weight = weight,
+         county_fips = as.numeric(county_AZ),
+         CD = as.numeric(CD118),
+         LD = as.numeric(LD_U),
+         zipcode = as.numeric(inputzip),
+         caseidID = caseid,
+         caseidID22 = UARZ0003_caseid,
+         state = "4",
+         year = 2024,
+         survey = "avpw2"
+         )
+## Code Survey items
+recode_rules <- list(
+  list(column = "voteChoice", recode_rules = c("1" = 0, "2" = 1), new_column = "presvote_trump_2020"),
+  list(column = "MIP", recode_rules = c(
+    "1" = "economy",
+    "2" = "climate/environment",
+    "3" = "climate/enviornment",
+    "5" =  "racism",
+    "6" = "terrorism",
+    "7" = "abortion",
+    "8" = "crime",
+    "9" = "poverty",
+    "10" = "national security",
+    "11" = "education",
+    "12" = "democracy",
+    "13" = "immigration",
+    "14" = "guns",
+    "15" = "foreign_policy",
+    "16" = "other"),  new_column = "mip"),
+  list(column = "contestation1", recode_rules = five_r,   new_column = "attend_march"),
+  list(column = "contestation2", recode_rules = five_r,   new_column = "criticize_election"),
+  list(column = "contestation3", recode_rules = five_r,   new_column = "burn_flag"),
+  list(column = "contestation4", recode_rules = five_r,   new_column = "recount"),
+  list(column = "contestation5", recode_rules = five_r,   new_column = "court"),
+  list(column = "contestation6", recode_rules = five_r,   new_column = "certify"),
+  list(column = "contestation7", recode_rules = five_r,   new_column = "concede"),
+  list(column = "contestation8", recode_rules = five_r,   new_column = "state_certify"),
+  list(column = "contestation9", recode_rules = five_r,   new_column = "violent"),
+  list(column = "contestation10", recode_rules = five_r,  new_column = "new_election"),
+  list(column = "auth1", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
+  list(column = "auth2", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_2"),
+  list(column = "auth3", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_3"),
+  list(column = "auth4", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_4"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party3"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+         "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideo5"),
+  list(column = "gender4", recode_rules = c("2" = 1, "1" = 0),   new_column = "female"))
+# Function to iterates  
+# Replace: devtools::load_all()
+avp24 = recodeList(avp24, recode_rules) 
+new_columns <- names(avp24)
+new_columns <- setdiff(new_columns, original_columns)
+
+# Extract the recoded columns
+avp24 <- avp24 %>% select(all_of(new_columns))
+```   
+
+## Western States
+## 2020
+
+**Sampling Frame**: Voters across five western states, Latino oversample
+
+YouGov interviewed 3577 respondents who were then matched down to a
+sample of 3000 to produce the final dataset. An oversample of 600
+Latinos were interviewed for a total of 3600. The respondents were
+matched to a sampling frame on gender, age, race, and education. The
+frame was constructed by stratified sampling from the full 2018 American
+Community Survey (ACS) 1-year sample with selection within strata by weighted
+sampling with replacements (using the person weights on the public use
+file).
+
+The matched cases were weighted to the sampling frame using propensity
+scores. The matched cases and the frame were combined and a logistic
+regression was estimated for inclusion in the frame. The propensity
+score function included age, gender, race/ethnicity, years of education,
+and region. The propensity scores were grouped into deciles of the
+estimated propensity score in the frame and post-stratified according to
+these deciles.
+
+The weights were then post-stratified on 2016 Presidential vote choice, and
+a four-way stratification of gender, age (4-categories), race (4-
+categories), and education (4-categories), to produce the final weight.
+
+```{r}
+## Code common items
+original_columns <- names(wss20)
+
+wss20 <- wss20 %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2022 - birthyr,
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8, 1, 0),
+         survey_weight = weight,
+         caseidID = caseid,
+         state = as.character(inputstate),
+         year = 2020,
+         survey = "wss20",
+         DATE = as.Date(endtime, "%YY-%mm-%dd", tz = "MST"),
+         post_election = ifelse(DATE > "2020-11-03", 1, 0),
+         post_call = ifelse(DATE >= "2020-11-07", 1, 0),
+         uncertainty = ifelse(DATE > "2020-11-03", 1, 0)
+  )
+wss20$pre_post_election <- NA
+wss20$pre_post_election <- ifelse(wss20$post_call == 0 & wss20$uncertainty == 0, 1, wss20$pre_post_election)
+wss20$pre_post_election <- ifelse(wss20$post_call == 0 & wss20$uncertainty == 1, 2, wss20$pre_post_election)
+wss20$pre_post_election <- ifelse(wss20$post_call == 1 & wss20$uncertainty == 1, 3, wss20$pre_post_election)
+
+       
+## Code Survey items
+recode_rules <- list(
+  list(column = "WSS15s", recode_rules = c(
+    "1" = "environment",
+    "2" = "police",
+    "3" = "economy",
+    "5" =  "housing",
+    "6" = "trade/foreign policy",
+    "7" = "trade/foreign policy",
+    "8" = "education",
+    "9" = "healthcare",
+    "10" = "covid",
+    "11" = "other"),  new_column = "mip"),
+  list(column = "WSS36_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
+  list(column = "WSS36_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
+  list(column = "WSS40_1", recode_rules = five_r,   new_column = "attend_march"),
+  list(column = "WSS40_2", recode_rules = five_r,   new_column = "criticize_election"),
+  list(column = "WSS40_3", recode_rules = five_r,   new_column = "burn_flag"),
+  list(column = "WSS40_4", recode_rules = five_r,   new_column = "recount"),
+  list(column = "WSS40_5", recode_rules = five_r,   new_column = "court"),
+  list(column = "WSS07_1a", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
+  list(column = "WSS07_1b", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_2"),
+  list(column = "WSS07_1c", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_3"),
+  list(column = "WSS07_1d", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_4"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party3"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+                                             "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideo5"),
+  list(column = "gender", recode_rules = c("2" = 1, "1" = 0),   new_column = "female"))
+# Function to iterates  
+# Replace: devtools::load_all()
+wss20 = recodeList(wss20, recode_rules) 
+wss20$presvote_trump_2020 <- ifelse(wss20$WSS36_b == 9, wss20$v2, wss20$v1)
+new_columns <- names(wss20)
+new_columns <- setdiff(new_columns, original_columns)
+
+# Extract the recoded columns
+wss20 <- wss20 %>% select(all_of(new_columns))
+```  
+
+
+## Western States
+## 2024
+
+**Sampling Frame**: Voters across five western states, Latino oversample
+
+YouGov interviewed 5082 respondents pre and post the 2024 election across the
+states of Arizona (1286), Colorado (1187), Nevada (615), New Mexico (664), and
+Utah (618), in addition to an oversample of 715 Hispanic respondents. 
+
+The Hispanic oversample was matched down to 600 observations (300 before and after
+the election), matched to a sampling frame on gender, age, race, and education.
+The sampling frame is a politically representative "modeled frame" of Hispanic
+US adults, based upon the American Community Survey (ACS) public use microdata
+file, public voter file records, the 2020 Current Population Survey (CPS)
+Voting and Registration supplements, the 2020 National Election Pool (NEP) exit
+poll, and the 2020 CES surveys, including demographics and 2020 presidential vote.
+The matched cases were weighted to the sampling frame using propensity scores.
+The matched cases and the frame were combined and a logistic regression was
+estimated for inclusion in the frame. The propensity score function included age,
+gender, race/ethnicity, years of education, and state. The propensity scores were
+grouped into deciles of the estimated propensity score in the frame and
+post-stratified according to these deciles.
+
+The weights were then post-stratified on 2020 presidential vote choice as well
+as a four-way stratification of gender, age (4-categories), race (4-categories),
+and education (4-categories), to produce the Hispanic over sample weight.
+We next proceeded to match down samples by state -- initially excluding the
+Hispanic oversample results -- with 1100 for Arizona (550 before/after), 1000
+for Colorado (500 before/after), 450 for Nevada (225 before/after), 400 for
+New Mexico (200 before/after), and 450 for Utah (225 before/after). The respondents
+were matched to a sampling frame on gender, age, race, and education by state.
+The sampling frame is a politically representative "modeled frame" of US adults
+within these states, based upon the American Community Survey (ACS) public use
+microdata file, public voter file records, the 2020 Current Population Survey
+(CPS) Voting and Registration supplements, the 2020 National Election Pool (NEP)
+exit poll, and the 2020 CES surveys, including demographics and 2020 presidential
+vote.
+
+The matched cases were weighted to the sampling frame using propensity scores.
+The matched cases and the frame were combined and a logistic regression was
+estimated for inclusion in the frame. The propensity score function included age,
+gender, race/ethnicity, years of education, and home ownership. The propensity
+scores were grouped into deciles of the estimated propensity score in the frame
+and post-stratified according to these deciles.
+The weights were then post-stratified on 2020 presidential vote choice, 2024
+presidential vote choice, as well as a four-way stratification of gender, age
+(4-categories), race (4-categories), and education (4-categories), to produce
+the initial weights by state.
+
+Upon acquiring the initial weights by state, the respective Latino oversample
+observations were added into their respective states. These aggregated state
+frames were then post stratified by the Hispanic proportion of the population
+within these states, as determined via the sampling frame to produce the final
+weights by state.
+
+Finally, all of the state observations were aggregated, with results weighted by
+the proportion of the state's population within the sampling frame, to produce
+a final single aggregated weight for the final 4000 observations.
+
+```{r}
+original_columns <- names(wss24)
+
+wss24 <- wss24 %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         female = ifelse(gender == 2, 1, 0),
+         age = 2024 - birthyr,
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8, 1, 0),
+         survey_weight = weight_all,
+         caseidID = caseid,
+         state = as.character(inputstate),
+         WSS007_b = as.numeric(WSS007_b),
+         WSS007_c = as.numeric(WSS007_c),
+         year = 2024,
+         survey = "wss24",
+         pre_post_election = ifelse(wave == 1, 1, 0)
+         )
+
+
+## Code Survey items
+recode_rules <- list(
+  list(column = "WSS007_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
+  list(column = "WSS007_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
+  list(column = "WSS029_a", recode_rules = five_r,   new_column = "attend_march"),
+  list(column = "WSS029_b", recode_rules = five_r,   new_column = "burn_flag"),
+  list(column = "WSS029_c", recode_rules = five_r,   new_column = "court"),
+  list(column = "WSS029_d", recode_rules = five_r,   new_column = "recount"),
+  list(column = "WSS029_e", recode_rules = five_r,   new_column = "criticize_election"),
+  list(column = "WSS029_f", recode_rules = five_r,   new_column = "concede"),
+  list(column = "WSS029_g", recode_rules = five_r,   new_column = "certify_occupy"),
+  list(column = "WSS029_h", recode_rules = five_r,   new_column = "undermine"),
+  list(column = "WSS013_a", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
+  list(column = "WSS013_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_2"),
+  list(column = "WSS013_c", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_3"),
+  list(column = "WSS013_d", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_4"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party3"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+                                             "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideo5"),
+  list(column = "presvote20post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2020"),
+  list(column = "presvote16post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2016")
+)
+# Function to iterates  
+# Replace: devtools::load_all()
+wss24 = recodeList(wss24, recode_rules) 
+wss24$presvote_trump_2024 <- ifelse(is.na(wss24$v1), wss24$v2, wss24$v1)
+new_columns <- names(wss24)
+new_columns <- setdiff(new_columns, original_columns)
+
+# Extract the recoded columns
+wss24 <- wss24 %>% select(all_of(new_columns))
+```  
+
+## CES ASU Module
+
+Pretest, followed with post-test, randomization to conditions (50, 25, 25).
+
+Pretest: "Many people are unhappy with the outcomes of elections. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election?"
+
+Control: "Many people are unhappy with the outcomes of elections. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election?"
+
+
+Fraud: Many people are unhappy with the outcomes of elections, especially when there are concerns about election fraud. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election? 
+
+Norms: The peaceful transfer of power is a foundation of American democracy. However, many people are unhappy with the outcomes of elections. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election? 
+
+```{r}
+original_columns <- names(cesASU)
+
+cesASU <- cesASU %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2023 - birthyr,
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8 & as.numeric(faminc_new) < 100, 1, 0),
+         caseidID = caseid,
+         state = as.character(inputstate),
+         year = 2023,
+         survey = "cesASU",
+)
+    
+## Code Survey items
+recode_rules <- list(
+  list(column = "ASU351", recode_rules = five_r,   new_column = "attend_marchpre"),
+  list(column = "ASU352", recode_rules = five_r,   new_column = "burn_flagpre"),
+  list(column = "ASU353", recode_rules = five_r,   new_column = "courtpre"),
+  list(column = "ASU354", recode_rules = five_r,   new_column = "recountpre"),
+  list(column = "ASU355", recode_rules = five_r,   new_column = "criticize_electionpre"),
+  list(column = "ASU356", recode_rules = five_r,   new_column = "violencepre"),
+  list(column = "ASU412", recode_rules = five_r,   new_column = "attend_march1"),
+  list(column = "ASU413", recode_rules = five_r,   new_column = "burn_flag1"),
+  list(column = "ASU414", recode_rules = five_r,   new_column = "court1"),
+  list(column = "ASU415", recode_rules = five_r,   new_column = "recount1"),
+  list(column = "ASU416", recode_rules = five_r,   new_column = "criticize_election1"),
+  list(column = "ASU417", recode_rules = five_r,   new_column = "violence1"),
+  list(column = "ASU418", recode_rules = five_r,   new_column = "attend_march2"),
+  list(column = "ASU419", recode_rules = five_r,   new_column = "burn_flag2"),
+  list(column = "ASU420", recode_rules = five_r,   new_column = "court2"),
+  list(column = "ASU421", recode_rules = five_r,   new_column = "recount2"),
+  list(column = "ASU422", recode_rules = five_r,   new_column = "criticize_election2"),
+  list(column = "ASU423", recode_rules = five_r,   new_column = "violence2"),
+  list(column = "ASU424", recode_rules = five_r,   new_column = "attend_march3"),
+  list(column = "ASU425", recode_rules = five_r,   new_column = "burn_flag3"),
+  list(column = "ASU426", recode_rules = five_r,   new_column = "court3"),
+  list(column = "ASU427", recode_rules = five_r,   new_column = "recount3"),
+  list(column = "ASU428", recode_rules = five_r,   new_column = "criticize_election3"),
+  list(column = "ASU429", recode_rules = five_r,   new_column = "violence3"),
+  list(column = "ASU429", recode_rules = five_r,   new_column = "violence3"),
+
+  list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party3"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+                                             "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideo5"),
+  list(column = "presvote20post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2020"),
+  list(column = "presvote16post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2016")
+)
+
+cesASU = recodeList(cesASU, recode_rules) 
+
+
+
+
+cesASU$post_experimental_condition <- ifelse(cesASU$QASU412rand == 1, "Control", 
+                                      ifelse(cesASU$QASU412rand == 2, "Fraud", 
+                                          ifelse(cesASU$QASU412rand == 3, "Norms",  
+                                              NA)))
+  
+  
+  
+## Kind of strange coding of the conditions, combine to common variable
+cesASU %>%
+  mutate(
+    attend_march_post = ifelse(!is.na(attend_march1), attend_march1,
+       ifelse(!is.na(attend_march2), attend_march2,
+       ifelse(!is.na(attend_march3), attend_march3,
+              NA))),
+    burn_flag_post = ifelse(!is.na(burn_flag1), burn_flag1,
+       ifelse(!is.na(burn_flag2), burn_flag2,
+       ifelse(!is.na(burn_flag3), burn_flag3,
+              NA))),
+    court_post = ifelse(!is.na(court1), court1,
+       ifelse(!is.na(court2), court2,
+       ifelse(!is.na(court3), court3,
+              NA))),
+    recount_post = ifelse(!is.na(recount1), recount1,
+       ifelse(!is.na(recount2), recount2,
+       ifelse(!is.na(recount3), recount3,
+              NA))),
+    criticize_election_post = ifelse(!is.na(criticize_election1), criticize_election1,
+       ifelse(!is.na(criticize_election2), criticize_election2,
+       ifelse(!is.na(criticize_election3), criticize_election3,
+              NA)))
+    )
+new_columns <- names(cesASU)
+new_columns <- setdiff(new_columns, original_columns)
+cesASU <- cesASU %>% select(all_of(new_columns))
+
+
+```  
+
+
+## CES BYU Module
+
+```{r}
+# Save original column names
+original_columns <- names(cesBYU)
+
+cesBYU <- cesBYU %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2023 - birthyr,
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8 & as.numeric(faminc_new) < 100, 1, 0),
+         caseidID = caseid,
+         state = as.character(inputstate),
+         experimental_condition_post = ifelse(BYU411_rand == "BYU4Xa", "Control", 
+                                      ifelse(BYU411_rand == "BYU4Xb", "Fraud", 
+                                          ifelse(BYU411_rand == "BYU4Xc", "Norms",  
+                                                 NA))),
+         experimental_condition_pre = ifelse(BYU311_rand == "Option A: Support or Oppose", "support_condition",
+                                             ifelse(BYU311_rand == "Option B: Participate", "participate_condition",
+                                                    NA)),
+         year = 2023,
+         survey = "cesBYU"
+)
+## Code Survey items
+recode_rules <- list(
+# The pretest
+  list(column = "BYU311a", recode_rules = five_r,   new_column = "attend_march1"),
+  list(column = "BYU312a", recode_rules = five_r,   new_column = "burn_flag1"),
+  list(column = "BYU313a", recode_rules = five_r,   new_column = "court1"),
+  list(column = "BYU314a", recode_rules = five_r,   new_column = "recount1"),
+  list(column = "BYU315a", recode_rules = five_r,   new_column = "criticize_election1"),
+  list(column = "BYU316a", recode_rules = five_r,   new_column = "violence1"),
+  list(column = "BYU311b", recode_rules = five_r,   new_column = "attend_march2"),
+  list(column = "BYU312b", recode_rules = five_r,   new_column = "burn_flag2"),
+  list(column = "BYU313b", recode_rules = five_r,   new_column = "court2"),
+  list(column = "BYU314b", recode_rules = five_r,   new_column = "recount2"),
+  list(column = "BYU315b", recode_rules = five_r,   new_column = "criticize_election2"),
+  list(column = "BYU316b", recode_rules = five_r,   new_column = "violence2"),
+  # And there is an indicator called BYU311a_rand
+# This constitutes the post test  
+  list(column = "BYU411", recode_rules = five_r,   new_column = "attend_marchp"),
+  list(column = "BYU412", recode_rules = five_r,   new_column = "burn_flagp"),
+  list(column = "BYU413", recode_rules = five_r,   new_column = "courtp"),
+  list(column = "BYU414", recode_rules = five_r,   new_column = "recountp"),
+
+# And there is another variable called BYU411_rand
+
+  list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party3"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+                                             "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideo5"),
+  list(column = "presvote20post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2020"),
+  list(column = "presvote16post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2016")
+)
+cesBYU = recodeList(cesBYU, recode_rules) 
+# Only save the newly created ones
+
+
+cesBYU %>%
+  mutate(
+    attend_march = ifelse(!is.na(attend_march1), attend_march1,
+       ifelse(!is.na(attend_march2), attend_march2,
+        NA)),
+    burn_flag = ifelse(!is.na(burn_flag1), burn_flag1,
+       ifelse(!is.na(burn_flag2), burn_flag2,
+       NA)),
+    court = ifelse(!is.na(court1), court1,
+       ifelse(!is.na(court2), court2,
+      NA)),
+    recount = ifelse(!is.na(recount1), recount1,
+       ifelse(!is.na(recount2), recount2,
+       NA)),
+    criticize_election = ifelse(!is.na(criticize_election1), criticize_election1,
+       ifelse(!is.na(criticize_election2), criticize_election2,
+       NA))
+    ) -> cesBYU
+
+new_columns <- names(cesBYU)
+new_columns <- setdiff(new_columns, original_columns)
+cesBYU <- cesBYU %>% 
+  select(all_of(new_columns))
+
+```
+
+
+```{r}
+bind_rows(avp24, wss20, wss24, cesASU, cesBYU) %>% 
+  select(black, white, asian, american_indian,  latino, age,
+         married, college, faminc, state, year, survey, 
+         caseidID, caseidID22, survey, year,
+         attend_march, burn_flag, court, recount, criticize_election, 
+         auth_1, auth_2, auth_3, auth_4, party3, christian,
+         post_experimental_condition, experimental_condition_post, 
+         experimental_condition_pre,
+         pre_post_election) -> electoral_contestation
+
+save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoral_constestation.rda")
+
+```
+
+
