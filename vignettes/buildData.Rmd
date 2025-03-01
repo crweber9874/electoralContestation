@@ -466,12 +466,12 @@ cesASU <- cesASU %>%
     
 ## Code Survey items
 recode_rules <- list(
-  list(column = "ASU351", recode_rules = five_r,   new_column = "attend_march"),
-  list(column = "ASU352", recode_rules = five_r,   new_column = "burn_flag"),
-  list(column = "ASU353", recode_rules = five_r,   new_column = "court"),
-  list(column = "ASU354", recode_rules = five_r,   new_column = "recount"),
-  list(column = "ASU355", recode_rules = five_r,   new_column = "criticize_election"),
-  list(column = "ASU356", recode_rules = five_r,   new_column = "violence"),
+  list(column = "ASU351", recode_rules = five_n,   new_column = "attend_march"),
+  list(column = "ASU352", recode_rules = five_n,   new_column = "burn_flag"),
+  list(column = "ASU353", recode_rules = five_n,   new_column = "court"),
+  list(column = "ASU354", recode_rules = five_n,   new_column = "recount"),
+  list(column = "ASU355", recode_rules = five_n,   new_column = "criticize_election"),
+  list(column = "ASU356", recode_rules = five_n,   new_column = "violence"),
   list(column = "ASU412", recode_rules = five_r,   new_column = "attend_march1"),
   list(column = "ASU413", recode_rules = five_r,   new_column = "burn_flag1"),
   list(column = "ASU414", recode_rules = five_r,   new_column = "court1"),
@@ -545,7 +545,7 @@ cesASU = cesASU %>%
     )
 new_columns <- names(cesASU)
 new_columns <- setdiff(new_columns, original_columns)
-cesASU <- cesASU %>% select(all_of(new_columns))
+#cesASU <- cesASU %>% select(all_of(new_columns))
 
 
 ```  
@@ -582,18 +582,18 @@ cesBYU <- cesBYU %>%
 ## Code Survey items
 recode_rules <- list(
 # The pretest
-  list(column = "BYU311a", recode_rules = five_r,   new_column = "attend_march1"),
-  list(column = "BYU312a", recode_rules = five_r,   new_column = "burn_flag1"),
-  list(column = "BYU313a", recode_rules = five_r,   new_column = "court1"),
-  list(column = "BYU314a", recode_rules = five_r,   new_column = "recount1"),
-  list(column = "BYU315a", recode_rules = five_r,   new_column = "criticize_election1"),
-  list(column = "BYU316a", recode_rules = five_r,   new_column = "violence1"),
-  list(column = "BYU311b", recode_rules = five_r,   new_column = "attend_march2"),
-  list(column = "BYU312b", recode_rules = five_r,   new_column = "burn_flag2"),
-  list(column = "BYU313b", recode_rules = five_r,   new_column = "court2"),
-  list(column = "BYU314b", recode_rules = five_r,   new_column = "recount2"),
-  list(column = "BYU315b", recode_rules = five_r,   new_column = "criticize_election2"),
-  list(column = "BYU316b", recode_rules = five_r,   new_column = "violence2"),
+  list(column = "BYU311a", recode_rules = five_n,   new_column = "attend_march1"),
+  list(column = "BYU312a", recode_rules = five_n,   new_column = "burn_flag1"),
+  list(column = "BYU313a", recode_rules = five_n,   new_column = "court1"),
+  list(column = "BYU314a", recode_rules = five_n,   new_column = "recount1"),
+  list(column = "BYU315a", recode_rules = five_n,   new_column = "criticize_election1"),
+  list(column = "BYU316a", recode_rules = five_n,   new_column = "violence1"),
+  list(column = "BYU311b", recode_rules = five_n,   new_column = "attend_march2"),
+  list(column = "BYU312b", recode_rules = five_n,   new_column = "burn_flag2"),
+  list(column = "BYU313b", recode_rules = five_n,   new_column = "court2"),
+  list(column = "BYU314b", recode_rules = five_n,   new_column = "recount2"),
+  list(column = "BYU315b", recode_rules = five_n,   new_column = "criticize_election2"),
+  list(column = "BYU316b", recode_rules = five_n,   new_column = "violence2"),
   # And there is an indicator called BYU311a_rand
 # This constitutes the post test  
   list(column = "BYU411", recode_rules = five_r,   new_column = "attend_marchp"),

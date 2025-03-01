@@ -5,8 +5,8 @@ output: html_document
 
 ```{r}
 rm(list = ls())
-#devtools::install_github("crweber9874/electoralContestation")
-library(electoralContestation)
+devtools::install_github("crweber9874/electoralContestation")
+#library(electoralContestation)
 library(dplyr)
 library(lavaan)
 
@@ -34,7 +34,7 @@ summary(fit, fit.measures = TRUE)
 model <- ' f1 =~  burn_flag + attend_march 
             f2 =~ court + recount + criticize_election'
 
-fit <- cfa(model, data = electoral_contestation %>% filter(survey == "cesBYU"), 
+fit <- cfa(model, data = electoral_contestation %>% filter(survey == "cesASU"), 
                       ordered = ordinal_data)
 
 # mod indices
