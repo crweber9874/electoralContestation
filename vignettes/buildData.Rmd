@@ -520,7 +520,7 @@ cesASU$post_experimental_condition <- ifelse(cesASU$QASU412rand == 1, "Control",
   
   
 ## Kind of strange coding of the conditions, combine to common variable
-cesASU %>%
+cesASU = cesASU %>%
   mutate(
     attend_march = ifelse(!is.na(attend_march1), attend_march1,
        ifelse(!is.na(attend_march2), attend_march2,
