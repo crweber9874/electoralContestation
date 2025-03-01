@@ -5,7 +5,7 @@ output: html_document
 
 ```{r}
 rm(list = ls())
-devtools::install_github("crweber9874/electoralContestation")
+#devtools::install_github("crweber9874/electoralContestation")
 library(electoralContestation)
 library(dplyr)
 library(lavaan)
