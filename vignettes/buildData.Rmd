@@ -658,7 +658,7 @@ bind_rows(avp23, avp24, wss20, wss24, cesASU, cesBYU) %>%
          post_experimental_condition, experimental_condition_post, 
          experimental_condition_pre,
          pre_post_election) -> electoral_contestation
-
+# data
 save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoral_constestation.rda")
 
 ```
