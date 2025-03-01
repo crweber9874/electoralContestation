@@ -21,12 +21,23 @@ ordinal_data = c("burn_flag", "court", "recount", "criticize_election", "attend_
 
 
 
-model <- ' f1 =~ burn_flag + attend_march 
-           f2 =~ court + recount + criticize_election'
+model <- ' f1 =~ burn_flag + attend_march +
+            court + recount + criticize_election'
 
-fit <- sem(model, data = electoral_contestation, ordered = ordinal_data, group = "survey")
+fit <- sem(model, data = electoral_contestation, 
+                      ordered = ordinal_data)
 
 # mod indices
+summary(fit, fit.measures = TRUE)
 
+
+model <- ' f1 =~  burn_flag + attend_march 
+            f2 =~ court + recount + criticize_election'
+
+fit <- cfa(model, data = electoral_contestation %>% filter(survey == "cesBYU"), 
+                      ordered = ordinal_data)
+
+# mod indices
+summary(fit, fit.measures = TRUE)
 
 ```

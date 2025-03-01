@@ -466,12 +466,12 @@ cesASU <- cesASU %>%
     
 ## Code Survey items
 recode_rules <- list(
-  list(column = "ASU351", recode_rules = five_r,   new_column = "attend_marchpre"),
-  list(column = "ASU352", recode_rules = five_r,   new_column = "burn_flagpre"),
-  list(column = "ASU353", recode_rules = five_r,   new_column = "courtpre"),
-  list(column = "ASU354", recode_rules = five_r,   new_column = "recountpre"),
-  list(column = "ASU355", recode_rules = five_r,   new_column = "criticize_electionpre"),
-  list(column = "ASU356", recode_rules = five_r,   new_column = "violencepre"),
+  list(column = "ASU351", recode_rules = five_r,   new_column = "attend_march"),
+  list(column = "ASU352", recode_rules = five_r,   new_column = "burn_flag"),
+  list(column = "ASU353", recode_rules = five_r,   new_column = "court"),
+  list(column = "ASU354", recode_rules = five_r,   new_column = "recount"),
+  list(column = "ASU355", recode_rules = five_r,   new_column = "criticize_election"),
+  list(column = "ASU356", recode_rules = five_r,   new_column = "violence"),
   list(column = "ASU412", recode_rules = five_r,   new_column = "attend_march1"),
   list(column = "ASU413", recode_rules = five_r,   new_column = "burn_flag1"),
   list(column = "ASU414", recode_rules = five_r,   new_column = "court1"),
@@ -522,23 +522,23 @@ cesASU$post_experimental_condition <- ifelse(cesASU$QASU412rand == 1, "Control",
 ## Kind of strange coding of the conditions, combine to common variable
 cesASU = cesASU %>%
   mutate(
-    attend_march = ifelse(!is.na(attend_march1), attend_march1,
+    attend_march_post = ifelse(!is.na(attend_march1), attend_march1,
        ifelse(!is.na(attend_march2), attend_march2,
        ifelse(!is.na(attend_march3), attend_march3,
               NA))),
-    burn_flag = ifelse(!is.na(burn_flag1), burn_flag1,
+    burn_flag_post = ifelse(!is.na(burn_flag1), burn_flag1,
        ifelse(!is.na(burn_flag2), burn_flag2,
        ifelse(!is.na(burn_flag3), burn_flag3,
               NA))),
-    court = ifelse(!is.na(court1), court1,
+    court_post = ifelse(!is.na(court1), court1,
        ifelse(!is.na(court2), court2,
        ifelse(!is.na(court3), court3,
               NA))),
-    recount = ifelse(!is.na(recount1), recount1,
+    recount_post = ifelse(!is.na(recount1), recount1,
        ifelse(!is.na(recount2), recount2,
        ifelse(!is.na(recount3), recount3,
               NA))),
-    criticize_election = ifelse(!is.na(criticize_election1), criticize_election1,
+    criticize_election_post = ifelse(!is.na(criticize_election1), criticize_election1,
        ifelse(!is.na(criticize_election2), criticize_election2,
        ifelse(!is.na(criticize_election3), criticize_election3,
               NA)))
@@ -659,7 +659,7 @@ bind_rows(avp23, avp24, wss20, wss24, cesASU, cesBYU) %>%
          experimental_condition_pre,
          pre_post_election) -> electoral_contestation
 # data
-save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoral_constestation.rda")
+save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoralConstestation.rda")
 
 ```
 
