@@ -1,0 +1,31 @@
+---
+title: "measurment"
+output: html_document
+---
+
+```{r}
+rm(list = ls())
+library(electoralContestation)
+library(dplyr)
+library(lavaan)
+
+ordinal_data = c("burn_flag", "court", "recount", "criticize_election", "attend_march")
+
+
+# Make a lavaan model
+# model <- ' f1 =~ burn_flag + court + recount + criticize_election + attend_march'
+#cfa(model, ordered=ordinal_data, 
+#            data=electoral_contestation) %>% 
+#  summary(fit.measures = TRUE)
+
+
+
+model <- ' f1 =~ burn_flag + attend_march 
+           f2 =~ court + recount + criticize_election'
+
+fit <- sem(model, data = electoral_contestation, ordered = ordinal_data, group = "survey")
+
+# mod indices
+
+
+```
