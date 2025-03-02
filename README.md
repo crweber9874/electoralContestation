@@ -32,12 +32,5 @@ head(electoral_contestation)
 The package includes the following components:
 1. Graph utilities, recode functions, and a data file $\texttt{data(electoral_contestation)}
 
-$\textbf{Data Cleaning and Data Wrangling}$ $\texttt{../dataClean}$ This folder holds the recoded data files used throughout the book. The untouched, original data can be found in dataverse, along with the cleaned, transformed data.
-
-
-
-
-#1)  $\texttt{..../anes_c_recode.R}$. This large file structures the questions in the cumulative and individual cross sections in a logical manner, cleaning up missing data, creating categorical variables, etc. Because authoritarianism is not in the cumulative file, we must code the individual cross sections, then join back to the cumulative data based on the respondent identifier provided by the ANES.
- 
 
 

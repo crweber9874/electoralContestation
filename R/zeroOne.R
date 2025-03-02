@@ -9,7 +9,6 @@
 #'
 #'
 zero.one <- function(x) {
-
   min.x <- min(x, na.rm = T)
   max.x <- max(x - min.x, na.rm = T)
   return((x - min.x) / max.x)
