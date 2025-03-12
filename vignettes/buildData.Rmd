@@ -688,7 +688,7 @@ new_columns <- names(cesBYU)
 new_columns <- setdiff(new_columns, original_columns)
 cesBYU <- cesBYU %>% 
   select(all_of(new_columns))
-
+#
 ```
 
 
