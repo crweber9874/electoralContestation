@@ -55,7 +55,8 @@ avp23 <- avp23 %>%
          caseID = caseid, #By whatever is in the data,
          state = "4",
          year = 2023,
-         survey = "avpw1"
+         survey = "avpw1",
+         prepost = "post",
          )
 head(avp23)
 ```        
@@ -153,7 +154,8 @@ avp24 <- avp24 %>%
          caseidID22 = UARZ0003_caseid,
          state = "4",
          year = 2024,
-         survey = "avpw2"
+         survey = "avpw2",
+         prepost = "post"
          )
 ## Code Survey items
 recode_rules <- list(
@@ -255,12 +257,9 @@ wss20 <- wss20 %>%
          DATE = as.Date(endtime, "%YY-%mm-%dd", tz = "MST"),
          post_election = ifelse(DATE > "2020-11-03", 1, 0),
          post_call = ifelse(DATE >= "2020-11-07", 1, 0),
-         uncertainty = ifelse(DATE > "2020-11-03", 1, 0)
+         uncertainty = ifelse(DATE > "2020-11-03", 1, 0),
+         prepost = ifelse(DATE > "2020-11-03", "pre", "post")
   )
-wss20$pre_post_election <- NA
-wss20$pre_post_election <- ifelse(wss20$post_call == 0 & wss20$uncertainty == 0, 1, wss20$pre_post_election)
-wss20$pre_post_election <- ifelse(wss20$post_call == 0 & wss20$uncertainty == 1, 2, wss20$pre_post_election)
-wss20$pre_post_election <- ifelse(wss20$post_call == 1 & wss20$uncertainty == 1, 3, wss20$pre_post_election)
 
        
 ## Code Survey items
@@ -276,6 +275,26 @@ recode_rules <- list(
     "9" = "healthcare",
     "10" = "covid",
     "11" = "other"),  new_column = "mip"),
+  list(column = "WSS32_1", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeeting"),
+  list(column = "WSS32_2", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSign"),
+  list(column = "WSS32_3", recode_rules = c("1" = 1, "2" = 0),   new_column = "polVolunteer"),
+  list(column = "WSS32_4", recode_rules = c("1" = 1, "2" = 0),   new_column = "polProtest"),
+  list(column = "WSS32_5", recode_rules = c("1" = 1, "2" = 0),   new_column = "polOfficial"),
+  list(column = "WSS32_6", recode_rules = c("1" = 1, "2" = 0),   new_column = "polDonate"),
+  list(column = "WSS32_7", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSocial"),
+  list(column = "WSS32_8", recode_rules = c("1" = 1, "2" = 0),   new_column = "polPersuade"),
+  list(column = "WSS32_9", recode_rules = c("1" = 1, "2" = 0),   new_column = "polNone"),
+  list(column = "WSS54_1", recode_rules = four_r,   new_column = "trustCongress"),
+  list(column = "WSS54_2", recode_rules = four_r,   new_column = "trustPresident"),
+  list(column = "WSS54_3", recode_rules = four_r,   new_column = "trustSC"),
+  list(column = "WSS54_4", recode_rules = four_r,   new_column = "trustGovernment"),
+  list(column = "WSS54_5", recode_rules = four_r,   new_column = "trustStateleg"),
+  list(column = "WSS54_6", recode_rules = four_r,   new_column = "trustPolice"),
+  list(column = "WSS54_7", recode_rules = four_r,   new_column = "trustScience"),
+  list(column = "WSS33_1", recode_rules = five_n,   new_column = "internal_efficacy"),
+  list(column = "WSS33_2", recode_rules = five_n,   new_column = "external_efficacy"),
+  list(column = "WSS40_1_split", recode_rules = c("1" = 1, "2" = 0),   new_column = "violent_treat"),
+  list(column = "WSS40_5_split", recode_rules = c("1" = 1, "2" = 0),   new_column = "socialmedia_treat"),
   list(column = "WSS36_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
   list(column = "WSS36_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
   list(column = "WSS40_1", recode_rules = five_r,   new_column = "attend_march"),
@@ -388,12 +407,20 @@ wss24 <- wss24 %>%
          WSS007_c = as.numeric(WSS007_c),
          year = 2024,
          survey = "wss24",
-         pre_post_election = ifelse(wave == 1, 1, 0)
+         pre_post_election = ifelse(wave == 1, 1, 0),
+         # 0 - 100
+         trustPresident = as.numeric(WSS022_a)/100,
+         trustCongress = as.numeric(WSS022_b)/100,
+         trustSC = as.numeric(WSS022_c)/100,
+         trustGovernment = as.numeric(WSS022_d)/100,
+         trustStateleg = as.numeric(WSS022_e)/100,
          )
 
 
 ## Code Survey items
 recode_rules <- list(
+  list(column = "WSS009_a", recode_rules = five_n,   new_column = "internal_efficacy"),
+  list(column = "WSS009_b", recode_rules = five_n,   new_column = "external_efficacy"),
   list(column = "WSS007_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
   list(column = "WSS007_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
   list(column = "WSS029_a", recode_rules = five_r,   new_column = "attend_march"),
@@ -464,32 +491,42 @@ cesASU <- cesASU %>%
          survey = "cesASU",
 )
     
-## Code Survey items
+## Code Survey items -- follows pre-post test design
 recode_rules <- list(
+  list(column = "CC22_430a_1", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeeting"),
+  list(column = "CC22_430a_2", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSign"),
+  list(column = "CC22_430a_3", recode_rules = c("1" = 1, "2" = 0),   new_column = "polVolunteer"),
+  list(column = "CC22_430a_4", recode_rules = c("1" = 1, "2" = 0),   new_column = "polProtest"),
+  list(column = "CC22_430a_5", recode_rules = c("1" = 1, "2" = 0),   new_column = "polOfficial"),
+  list(column = "CC22_430a_6", recode_rules = c("1" = 1, "2" = 0),   new_column = "polDonate"),
+  list(column = "CC22_430a_8", recode_rules = c("1" = 1, "2" = 0),   new_column = "polNone"),
+  # Pre Election
   list(column = "ASU351", recode_rules = five_n,   new_column = "attend_march"),
   list(column = "ASU352", recode_rules = five_n,   new_column = "burn_flag"),
   list(column = "ASU353", recode_rules = five_n,   new_column = "court"),
   list(column = "ASU354", recode_rules = five_n,   new_column = "recount"),
   list(column = "ASU355", recode_rules = five_n,   new_column = "criticize_election"),
   list(column = "ASU356", recode_rules = five_n,   new_column = "violence"),
+  # Control
   list(column = "ASU412", recode_rules = five_r,   new_column = "attend_march1"),
   list(column = "ASU413", recode_rules = five_r,   new_column = "burn_flag1"),
   list(column = "ASU414", recode_rules = five_r,   new_column = "court1"),
   list(column = "ASU415", recode_rules = five_r,   new_column = "recount1"),
   list(column = "ASU416", recode_rules = five_r,   new_column = "criticize_election1"),
   list(column = "ASU417", recode_rules = five_r,   new_column = "violence1"),
+  # Fraud
   list(column = "ASU418", recode_rules = five_r,   new_column = "attend_march2"),
   list(column = "ASU419", recode_rules = five_r,   new_column = "burn_flag2"),
   list(column = "ASU420", recode_rules = five_r,   new_column = "court2"),
   list(column = "ASU421", recode_rules = five_r,   new_column = "recount2"),
   list(column = "ASU422", recode_rules = five_r,   new_column = "criticize_election2"),
   list(column = "ASU423", recode_rules = five_r,   new_column = "violence2"),
+  # Norms
   list(column = "ASU424", recode_rules = five_r,   new_column = "attend_march3"),
   list(column = "ASU425", recode_rules = five_r,   new_column = "burn_flag3"),
   list(column = "ASU426", recode_rules = five_r,   new_column = "court3"),
   list(column = "ASU427", recode_rules = five_r,   new_column = "recount3"),
   list(column = "ASU428", recode_rules = five_r,   new_column = "criticize_election3"),
-  list(column = "ASU429", recode_rules = five_r,   new_column = "violence3"),
   list(column = "ASU429", recode_rules = five_r,   new_column = "violence3"),
 
   list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
@@ -508,8 +545,6 @@ recode_rules <- list(
 )
 
 cesASU = recodeList(cesASU, recode_rules) 
-
-
 
 
 cesASU$post_experimental_condition <- ifelse(cesASU$QASU412rand == 1, "Control", 
@@ -545,7 +580,13 @@ cesASU = cesASU %>%
     )
 new_columns <- names(cesASU)
 new_columns <- setdiff(new_columns, original_columns)
-#cesASU <- cesASU %>% select(all_of(new_columns))
+cesASU <- cesASU %>% select(all_of(new_columns))
+cesASU %>% 
+select(!(paste0("criticize_election", c("1", "2", "3")))) %>%
+        select(!paste0("recount", c("1", "2", "3")), paste0("burn_flag", c("1", "2", "3")), 
+         paste0("attend_march", c("1", "2", "3")), paste0("court", c("1", "2", "3"))) -> cesASU
+
+
 
 
 ```  
@@ -581,7 +622,21 @@ cesBYU <- cesBYU %>%
 )
 ## Code Survey items
 recode_rules <- list(
-# The pretest
+  list(column = "BYU767_1", recode_rules = c("1" = 1, "2" = 0),   new_column = "polButton"),
+  list(column = "BYU767_2", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSign"),
+  list(column = "BYU767_3", recode_rules = c("1" = 1, "2" = 0),   new_column = "polPersuade"),
+  list(column = "BYU767_4", recode_rules = c("1" = 1, "2" = 0),   new_column = "polTalk"),
+  list(column = "BYU767_5", recode_rules = c("1" = 1, "2" = 0),   new_column = "polEmail"),
+  list(column = "BYU767_6", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeme"),
+  list(column = "BYU767_7", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeme_create"),
+  list(column = "BYU90", recode_rules = c("1" = 1, "2" = 1, "3" = 2,
+                                             "4" = 3, "5" = 4, "6" = 5,
+                                             "7" = 5),   new_column = "internal_efficacy"),
+  list(column = "BYU100N", recode_rules = c("1" = 1, "2" = 1, "3" = 2,
+                                             "4" = 3, "5" = 4, "6" = 5,
+                                             "7" = 5),   new_column = "external_efficacy"),
+
+  # The pretest, conditions 1 and 2
   list(column = "BYU311a", recode_rules = five_n,   new_column = "attend_march1"),
   list(column = "BYU312a", recode_rules = five_n,   new_column = "burn_flag1"),
   list(column = "BYU313a", recode_rules = five_n,   new_column = "court1"),
@@ -622,24 +677,13 @@ cesBYU = recodeList(cesBYU, recode_rules)
 
 
 cesBYU %>%
-  mutate(
-    attend_march = ifelse(!is.na(attend_march1), attend_march1,
-       ifelse(!is.na(attend_march2), attend_march2,
-        NA)),
-    burn_flag = ifelse(!is.na(burn_flag1), burn_flag1,
-       ifelse(!is.na(burn_flag2), burn_flag2,
-       NA)),
-    court = ifelse(!is.na(court1), court1,
-       ifelse(!is.na(court2), court2,
-      NA)),
-    recount = ifelse(!is.na(recount1), recount1,
-       ifelse(!is.na(recount2), recount2,
-       NA)),
-    criticize_election = ifelse(!is.na(criticize_election1), criticize_election1,
-       ifelse(!is.na(criticize_election2), criticize_election2,
-       NA))
-    ) -> cesBYU
-
+  mutate(attend_march = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         burn_flag = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         recount = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         criticize_election = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         attend_march = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         court = ifelse( experimental_condition_post == "Control", attend_march1, NA)) -> cesBYU
+         
 new_columns <- names(cesBYU)
 new_columns <- setdiff(new_columns, original_columns)
 cesBYU <- cesBYU %>% 
@@ -658,6 +702,7 @@ bind_rows(avp23, avp24, wss20, wss24, cesASU, cesBYU) %>%
          post_experimental_condition, experimental_condition_post, 
          experimental_condition_pre,
          pre_post_election) -> electoral_contestation
+View(electoral_contestation)
 # data
 save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoralConstestation.rda")
 
