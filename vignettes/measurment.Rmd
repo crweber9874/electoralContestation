@@ -42,12 +42,12 @@ The $\texttt{electoralContestation}$ package includes a number of helper functio
 ```{r}
 rm(list = ls())
 # Install from repository
-#devtools::install_github("crweber9874/electoralContestation")
+devtools::install_github("crweber9874/electoralContestation")
 library(electoralContestation)
 library(dplyr)
 library(lavaan)
 #
-head(electoral_contestation)
+electoral_contestation$social
 ```
 From here, let's create a truncated "master" data file, with common content.
 
