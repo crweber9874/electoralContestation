@@ -687,15 +687,7 @@ cesBYU <- cesBYU %>%
 
 
 ```{r}
-bind_rows(avp23, avp24, wss20, wss24, cesASU, cesBYU) %>% 
-  select(black, white, asian, american_indian,  latino, age,
-         married, college, faminc, state, year, survey, 
-         caseidID, caseidID22, survey, year,
-         attend_march, burn_flag, court, recount, criticize_election, 
-         auth_1, auth_2, auth_3, auth_4, party3, christian,
-         post_experimental_condition, experimental_condition_post, 
-         experimental_condition_pre,
-         pre_post_election) -> electoral_contestation
+bind_rows(avp23, avp24, wss20, wss24, cesASU, cesBYU) -> electoral_contestation
 View(electoral_contestation)
 # data
 save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoralConstestation.rda")
