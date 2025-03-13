@@ -8,50 +8,60 @@ indent: true
 output:
   pdf_document: default
 ---
+
 ## Introduction
 
-We begin with a  descriptive question: What types of actions do Americans deem acceptable when someone disagrees with the results of an election? Here we focus on levels of support for various actions such as protesting, criticizing election integrity, burning the American flag, ballot recounts, or challenging the outcome in the courts. Moreover, we are interested in understanding the underlying structure of contestation preferences. Is a construct like contestation multidimensional? 
+We begin with a descriptive question: What types of actions do Americans deem acceptable when someone disagrees with the results of an election? Here we focus on levels of support for various actions such as protesting, criticizing election integrity, burning the American flag, ballot recounts, or challenging the outcome in the courts. Moreover, we are interested in understanding the underlying structure of contestation preferences. Is a construct like contestation multidimensional?
 
-On one hand, we might expect that contestation behaviors reside on a single underlying dimension, anchored by a preference for contestation behaviors on one pole, and an opposition to these behaviors at the other pole. However, there are several reasons to expect more nuance, due primarily to different norms surrounding such behaviors. For instance, while recounting ballots and supporting legal means to contest an election are common and generally perceived-to-be acceptable behaviors, attending a march or burning the flag are seen as more active and potentially transgressive behaviors. 
-Contestation behaviors may be effectively disaggregated into forms that pose a relatively high cost for individual citizens (i.e, require action) versus forms of contestation that are passive and impose a low cost for citizens. They can also be viewed as a continuum of behaviors that range from less to more normatively acceptable.
+On one hand, we might expect that contestation behaviors reside on a single underlying dimension, anchored by a preference for contestation behaviors on one pole, and an opposition to these behaviors at the other pole. However, there are several reasons to expect more nuance, due primarily to different norms surrounding such behaviors. For instance, while recounting ballots and supporting legal means to contest an election are common and generally perceived-to-be acceptable behaviors, attending a march or burning the flag are seen as more active and potentially transgressive behaviors. Contestation behaviors may be effectively disaggregated into forms that pose a relatively high cost for individual citizens (i.e, require action) versus forms of contestation that are passive and impose a low cost for citizens. They can also be viewed as a continuum of behaviors that range from less to more normatively acceptable.
 
 \subsection{Measuring Support for Contestation Behaviors}
 
-We measure support for behaviors aimed at contesting election results with a question battery that captures some of the most prominent ways election results are contested. 
-Respondents were asked, 
+We measure support for behaviors aimed at contesting election results with a question battery that captures some of the most prominent ways election results are contested. Respondents were asked,
 
-``Many people are unhappy with the outcomes of elections. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election?''
+\`\`Many people are unhappy with the outcomes of elections. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election?''
 
-$\bullet$ Attend a march or demonstration [, even if it might turn chaotic or dangerous] 
+$\bullet$ Attend a march or demonstration [, even if it might turn chaotic or dangerous]
 
-$\bullet$  Publicly criticize the integrity or fairness of the election [on social media]
+$\bullet$ Publicly criticize the integrity or fairness of the election [on social media]
 
-$\bullet$  Burn the American flag 
+$\bullet$ Burn the American flag
 
-$\bullet$  Support ballot recounts
+$\bullet$ Support ballot recounts
 
-$\bullet$  Contest the outcome in the courts
+$\bullet$ Contest the outcome in the courts
 
-Respondents were asked to rate their support for each behavior on a 5-point scale, ranging from 1 (strongly support) to 5 (strongly oppose). 
+Respondents were asked to rate their support for each behavior on a 5-point scale, ranging from 1 (strongly support) to 5 (strongly oppose).
 
-## Recoding and Scaling 
+## Recoding and Scaling
 
 We rely on six data sets in this project. The **Western States Survey** conducted in both 2020 and 2024. The **Arizona Voter Project** election surveys, conducted in 2023 and 2024. And the 2022 Congressional Election Study BYU module and the 2022 Congressional Election Study ASU module.
 
-The $\texttt{electoralContestation}$ package includes a number of helper functions to clean and recode these data. Downloading the package comes with the data  electoral_contestation. Absent the CES modules, there are 9,403 observations.
+The $\texttt{electoralContestation}$ package includes a number of helper functions to clean and recode these data. Downloading the package comes with the data $\texttt{electoral_contestation}$. The total data size is approximately 11,000 respondents.
 
 ```{r}
 rm(list = ls())
+# Install from repository
 #devtools::install_github("crweber9874/electoralContestation")
 library(electoralContestation)
 library(dplyr)
 library(lavaan)
-
-electoral_contestation <- electoral_contestation %>%
-  filter(survey %in% c("wss20", "wss24", "avpw1", "avpw2"))
-
+#
 head(electoral_contestation)
 ```
+From here, let's create a truncated "master" data file, with common content.
+
+```{r}
+electoral_contestation %>% 
+  filter(survey == "wss20") %>% names()
+  
+
+    
+
+```
+
+
+
 
 ```{r}
 ordinal_data = c("burn_flag", "court", "recount", "criticize_election", "attend_march")
@@ -65,6 +75,7 @@ fit <- cfa(model, data = electoral_contestation,
 
 # mod indices
 summary(fit, fit.measures = TRUE)
+
 ```
 
 The fit is good. With just these items, I don't find much of a multidimensional structure. I actually don't find much evidence of a two factor model for the surveys other than the 2020 Western; there also seems to be a bit of a problem with the burning flag item, as it doesn't seem all that related to the other items.
@@ -90,7 +101,6 @@ fit_scalar2 <- cfa(model, data = electoral_contestation, ordered = ordinal_data,
 # Compare models
 anova(fit_configural, fit_scalar2)
 ```
-
 
 There fairly substantial differences in comparing the fully variant model to the one that is equal across partisan groups. There seems to be measurement variance. Here is the fully varying model -- though note that without some common items it's not really possible to compare estimates
 
@@ -119,5 +129,3 @@ fit_modified <- sem(model, data = electoral_contestation,
 summary(fit_modified, fit.measures = TRUE)
 
 ```
-
-
