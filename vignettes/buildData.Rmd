@@ -317,6 +317,11 @@ recode_rules <- list(
 # Function to iterates  
 # Replace: devtools::load_all()
 wss20 = recodeList(wss20, recode_rules) 
+
+wss20$violent <- ifelse(wss20$WSS40_1_split == 1, attend_march, NA)
+wss20$attend_march <- ifelse(wss20$WSS40_1_split == 0, attend_march, NA)
+
+
 wss20$presvote_trump_2020 <- ifelse(wss20$WSS36_b == 9, wss20$v2, wss20$v1)
 new_columns <- names(wss20)
 new_columns <- setdiff(new_columns, original_columns)
@@ -505,28 +510,28 @@ recode_rules <- list(
   list(column = "ASU353", recode_rules = five_n,   new_column = "court"),
   list(column = "ASU354", recode_rules = five_n,   new_column = "recount"),
   list(column = "ASU355", recode_rules = five_n,   new_column = "criticize_election"),
-  list(column = "ASU356", recode_rules = five_n,   new_column = "violence"),
+  list(column = "ASU356", recode_rules = five_n,   new_column = "violent"),
   # Control
   list(column = "ASU412", recode_rules = five_r,   new_column = "attend_march1"),
   list(column = "ASU413", recode_rules = five_r,   new_column = "burn_flag1"),
   list(column = "ASU414", recode_rules = five_r,   new_column = "court1"),
   list(column = "ASU415", recode_rules = five_r,   new_column = "recount1"),
   list(column = "ASU416", recode_rules = five_r,   new_column = "criticize_election1"),
-  list(column = "ASU417", recode_rules = five_r,   new_column = "violence1"),
+  list(column = "ASU417", recode_rules = five_r,   new_column = "violent1"),
   # Fraud
   list(column = "ASU418", recode_rules = five_r,   new_column = "attend_march2"),
   list(column = "ASU419", recode_rules = five_r,   new_column = "burn_flag2"),
   list(column = "ASU420", recode_rules = five_r,   new_column = "court2"),
   list(column = "ASU421", recode_rules = five_r,   new_column = "recount2"),
   list(column = "ASU422", recode_rules = five_r,   new_column = "criticize_election2"),
-  list(column = "ASU423", recode_rules = five_r,   new_column = "violence2"),
+  list(column = "ASU423", recode_rules = five_r,   new_column = "violent2"),
   # Norms
   list(column = "ASU424", recode_rules = five_r,   new_column = "attend_march3"),
   list(column = "ASU425", recode_rules = five_r,   new_column = "burn_flag3"),
   list(column = "ASU426", recode_rules = five_r,   new_column = "court3"),
   list(column = "ASU427", recode_rules = five_r,   new_column = "recount3"),
   list(column = "ASU428", recode_rules = five_r,   new_column = "criticize_election3"),
-  list(column = "ASU429", recode_rules = five_r,   new_column = "violence3"),
+  list(column = "ASU429", recode_rules = five_r,   new_column = "violent3"),
 
   list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
   list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
@@ -636,13 +641,13 @@ recode_rules <- list(
   list(column = "BYU313a", recode_rules = five_n,   new_column = "court1"),
   list(column = "BYU314a", recode_rules = five_n,   new_column = "recount1"),
   list(column = "BYU315a", recode_rules = five_n,   new_column = "criticize_election1"),
-  list(column = "BYU316a", recode_rules = five_n,   new_column = "violence1"),
+  list(column = "BYU316a", recode_rules = five_n,   new_column = "violent1"),
   list(column = "BYU311b", recode_rules = five_n,   new_column = "attend_march2"),
   list(column = "BYU312b", recode_rules = five_n,   new_column = "burn_flag2"),
   list(column = "BYU313b", recode_rules = five_n,   new_column = "court2"),
   list(column = "BYU314b", recode_rules = five_n,   new_column = "recount2"),
   list(column = "BYU315b", recode_rules = five_n,   new_column = "criticize_election2"),
-  list(column = "BYU316b", recode_rules = five_n,   new_column = "violence2"),
+  list(column = "BYU316b", recode_rules = five_n,   new_column = "violent2"),
   # And there is an indicator called BYU311a_rand
 # This constitutes the post test  
   list(column = "BYU411", recode_rules = five_r,   new_column = "attend_marchp"),

@@ -42,44 +42,234 @@ The $\texttt{electoralContestation}$ package includes a number of helper functio
 ```{r}
 rm(list = ls())
 # Install from repository
-devtools::install_github("crweber9874/electoralContestation")
+#devtools::install_github("crweber9874/electoralContestation")
 library(electoralContestation)
 library(dplyr)
 library(lavaan)
 #
-electoral_contestation$social
 ```
 From here, let's create a truncated "master" data file, with common content.
 
 ```{r}
 electoral_contestation %>% 
-  filter(survey == "wss20") %>% names()
-  
-
-    
-
+  # replace attend_march as NA if socialmedia_treat = 1
+  mutate(attend_march = ifelse(violent_treat == 1, NA, attend_march)) %>%
+  mutate(criticize_election = ifelse(socialmedia_treat == 1, NA, criticize_election))
 ```
+In structural equation modeling, full information maximum likelihood (FIML) is frequently used when data are Missing At Random (MAR). FIML involves calculating the likelihood function based on the observed data, then it integrates out the missing values. The likelihood is calculated based on the information available. Insofar as the data are "missing at random" (MAR), FIML can be a useful way in an SEM to handle missing data, and it's not altogether different from the assumptions underlying imputation methods. I am basically using all the information available, across the six studies, using nine contestation items.
 
 
+* Attend a march or demonstration (WSS20[1/2], WSS24, AVPW1, AVPW2, ASU, BYU)
+* Burning the American flag (WSS20, WSS24, AVPW1, AVPW2, ASU, BYU)
+* Contest the outcome in the courts (WSS20, WSS24, AVPW1, AVPW2, ASU, BYU)
+* Support ballot recounts (WSS20, WSS24, AVPW1, AVPW2, ASU, BYU)
+* Publicly criticize the integrity or fairness of the election (WSS20[1/2], WSS24, AVPW1, AVPW2, ASU, BYU)
+* Engaging in violent acts (WSS24, ASU[Pre], BYU [Post, Control])
+* Public officials choosing to certify the election results (AVPW1, AVPW2)
+* Refusing to concede an election defeat (AVPW1, AVPW2)
+* Call a new election (AVPW1, AVPW2)
+* Undermine the election process (WSS24)
+
+Here is how this is done in lavaan. Let's just print out the output for a 1 through three factor model
+
+```{r}
+
+
+fit <- suppressWarnings(efa(data = electoral_contestation[,c("violent",
+                                                       "state_certify",
+                                                       "concede",
+                                                       "criticize_election",
+                                                       "attend_march",
+                                                       "court",
+                                                       "recount",
+                                                       "new_election",
+                                                       "undermine")],
+                            nfactors = 2,
+                            missing = "fiml",
+           ))
+
+summary(fit, fit.measures = TRUE, fit.measures = TRUE)
+```
 
 
 ```{r}
-ordinal_data = c("burn_flag", "court", "recount", "criticize_election", "attend_march")
 
-model <- ' f1 =~ court + recount + criticize_election +  attend_march 
-           court ~~ recount'
 
-fit <- cfa(model, data = electoral_contestation,
-           ordered = ordinal_data,
-           ) 
+fit <- suppressWarnings(efa(data = electoral_contestation[,c("violent",
+                                                       "state_certify",
+                                                       "concede",
+                                                       "criticize_election",
+                                                       "attend_march",
+                                                       "court",
+                                                       "undermine",
+                                                       "recount",
+                                                       "new_election")],
+                            nfactors = 3,
+                            missing = "fiml",
+           ))
+                                                       
+eigenvalues = summary(fit)[[10]]$nf3[[1]]$eigvals[[1]]
+
+eigen_df <- data.frame(
+  Factor = 1:length(eigenvalues),
+  Eigenvalue = eigenvalues
+)
+
+
+# Scree plot using ggplot2 (dots connected by lines)
+scree_plot <- ggplot(eigen_df, aes(x = Factor, y = Eigenvalue)) +
+  geom_line(alpha = 0.6) +  # Connect the dots with lines
+  geom_point(size = 6, alpha = 0.3, color = "black") + # Add dots at each point
+  labs(
+    title = "Electoral Contestation\nScree Plot",
+    x = "Factors",
+    y = "Eigenvalue"
+  ) +
+  theme_minimal() + 
+  # style a hell of lot better
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    plot.title = element_text(size = 16)
+  ) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "darkgrey")
+
+scree_plot
+```
+
+The two factor makes sense here -- both eigenvalues exceed the (arbitrary) cut point and the "elbow" is also at 2.
+
+
+Here's the fit for a confirmatory factor model, following this structure
+
+
+```{r}
+
+
+
+# ordinal_data = c("burn_flag", "court", "recount", "criticize_election", "attend_march",
+#                 "violent", "concede", "state_certify", "new_election" )
+
+model <- ' f1 =~ violent + state_certify + concede +  criticize_election + new_election           + undermine
+           f2 =~  attend_march + court + recount'
+
+
+
+fit <- suppressWarnings(cfa(model, data = electoral_contestation,
+           missing = "fiml"
+           ))
 
 # mod indices
 summary(fit, fit.measures = TRUE)
+```
+
+### Within Each Survey Wave
+
+Make the model a function
+```{r}
+# chattr:::chattr_app()
+runEFA = function(factors = 2, 
+                  data = electoral_contestation){
+  
+  
+         df = data
+  
+         fit <- suppressWarnings(efa(data = df,
+                            nfactors = factors,
+           ))
+       if(factors == 2) summary(fit)[[10]]$nf2[[1]]$eigvals[[1]]
+       if(factors == 3) summary(fit)[[10]]$nf3[[1]]$eigvals[[1]]
+       if(factors == 4) summary(fit)[[10]]$nf4[[1]]$eigvals[[1]]
+         
+        
+       
+
+           
+         # with three factors
+         # eigenvalues = summary(fit)[[10]]$nf3[[1]]$eigvals[[1]]
+         # with four
+         # eigenvalues = summary(fit)[[10]]$nf4[[1]]$eigvals[[1]]
+      
+      
+         eigen_df <- data.frame(
+           Factor = 1:length(eigenvalues),
+           Eigenvalue = eigenvalues
+         )                                      
+     # Scree plot using ggplot2 (dots connected by lines)
+scree_plot <- ggplot(eigen_df, aes(x = Factor, y = Eigenvalue)) +
+  geom_line(alpha = 0.6) +  # Connect the dots with lines
+  geom_point(size = 6, alpha = 0.3, color = "black") + # Add dots at each point
+  labs(
+    title = "Electoral Contestation\nScree Plot",
+    x = "Factors",
+    y = "Eigenvalue"
+  ) +
+  theme_minimal() + 
+  # style a hell of lot better
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    plot.title = element_text(size = 16)
+  ) + 
+  geom_hline(yintercept = 1, linetype = "dashed", color = "darkgrey")
+
+         
+         return(list(fit = fit, 
+                     eigen_df = eigen_df, 
+                     scree_plot = scree_plot))
+}
 
 ```
 
-The fit is good. With just these items, I don't find much of a multidimensional structure. I actually don't find much evidence of a two factor model for the surveys other than the 2020 Western; there also seems to be a bit of a problem with the burning flag item, as it doesn't seem all that related to the other items.
+```{r}
 
+contestation_names = c("state_certify", "concede","criticize_election", "attend_march", "court",  "recount", "new_election", "undermine", "violent") 
+
+
+electoral_contestation %>%
+  filter(survey == "cesASU") %>% 
+  select(all_of(contestation_names))  %>%
+  select_if(~ !all(is.na(.))) %>% runEFA(factors = 2)
+
+
+
+
+for (s in unique(electoral_contestation$survey)) {
+  data_subset = electoral_contestation %>%
+  filter(survey == "wss24") %>% 
+  select(all_of(contestation_names)) 
+  print(dim(data_subset))
+  
+  result <- runEFA(factors = 2, data = data_subset)
+  scree_plots[[survey]] <- result$scree_plot + 
+    ggplot2::ggtitle(paste("Scree Plot for", survey)) # Add survey title
+}
+
+
+```
+# Need to be able to see a scree plot for each election
+# Choose the 
+```{r}
+# Cycle through the surveys and save the scree_plot to a list
+library(dplyr)
+scree_plots <- list()
+for (s in unique(electoral_contestation$survey)) {
+  data_subset <- electoral_contestation %>% dplyr::filter(survey == s)
+  print(dim(data_subset))
+  result <- runEFA(factors = 3, data = data_subset)
+  scree_plots[[survey]] <- result$scree_plot + 
+    ggplot2::ggtitle(paste("Scree Plot for", survey)) # Add survey title
+}
+
+```
+
+Seems to fit the idea of a "traditional" means of protest? 
 ```{r}
 electoral_contestation %>%
   select("burn_flag", "court", "criticize_election", "attend_march", "recount") %>%
