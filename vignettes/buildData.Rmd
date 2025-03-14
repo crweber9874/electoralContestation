@@ -318,8 +318,8 @@ recode_rules <- list(
 # Replace: devtools::load_all()
 wss20 = recodeList(wss20, recode_rules) 
 
-wss20$violent <- ifelse(wss20$WSS40_1_split == 1, attend_march, NA)
-wss20$attend_march <- ifelse(wss20$WSS40_1_split == 0, attend_march, NA)
+wss20$violent <- ifelse(wss20$WSS40_1_split == 1, wss20$attend_march, NA)
+wss20$attend_march <- ifelse(wss20$WSS40_1_split == 0, wss20$attend_march, NA)
 
 
 wss20$presvote_trump_2020 <- ifelse(wss20$WSS36_b == 9, wss20$v2, wss20$v1)

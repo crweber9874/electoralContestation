@@ -50,12 +50,6 @@ library(lavaan)
 ```
 From here, let's create a truncated "master" data file, with common content.
 
-```{r}
-electoral_contestation %>% 
-  # replace attend_march as NA if socialmedia_treat = 1
-  mutate(attend_march = ifelse(violent_treat == 1, NA, attend_march)) %>%
-  mutate(criticize_election = ifelse(socialmedia_treat == 1, NA, criticize_election))
-```
 In structural equation modeling, full information maximum likelihood (FIML) is frequently used when data are Missing At Random (MAR). FIML involves calculating the likelihood function based on the observed data, then it integrates out the missing values. The likelihood is calculated based on the information available. Insofar as the data are "missing at random" (MAR), FIML can be a useful way in an SEM to handle missing data, and it's not altogether different from the assumptions underlying imputation methods. I am basically using all the information available, across the six studies, using nine contestation items.
 
 
@@ -153,7 +147,7 @@ Here's the fit for a confirmatory factor model, following this structure
 # ordinal_data = c("burn_flag", "court", "recount", "criticize_election", "attend_march",
 #                 "violent", "concede", "state_certify", "new_election" )
 
-model <- ' f1 =~ violent + state_certify + concede +  criticize_election + new_election           + undermine
+model <- ' f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine
            f2 =~  attend_march + court + recount'
 
 
@@ -170,30 +164,21 @@ summary(fit, fit.measures = TRUE)
 
 Make the model a function
 ```{r}
-# chattr:::chattr_app()
 runEFA = function(factors = 2, 
                   data = electoral_contestation){
   
   
          df = data
   
-         fit <- suppressWarnings(efa(data = df,
+         fit <- suppressWarnings(
+                            efa(data = data,
                             nfactors = factors,
+                            missing = "fiml"
            ))
-       if(factors == 2) summary(fit)[[10]]$nf2[[1]]$eigvals[[1]]
-       if(factors == 3) summary(fit)[[10]]$nf3[[1]]$eigvals[[1]]
-       if(factors == 4) summary(fit)[[10]]$nf4[[1]]$eigvals[[1]]
-         
-        
-       
-
-           
-         # with three factors
-         # eigenvalues = summary(fit)[[10]]$nf3[[1]]$eigvals[[1]]
-         # with four
-         # eigenvalues = summary(fit)[[10]]$nf4[[1]]$eigvals[[1]]
-      
-      
+       if(factors == 2) eigenvalues = summary(fit)[[10]]$nf2[[1]]$eigvals[[1]]
+       if(factors == 3) eigenvalues =summary(fit)[[10]]$nf3[[1]]$eigvals[[1]]
+       if(factors == 4) eigenvalues =summary(fit)[[10]]$nf4[[1]]$eigvals[[1]]
+    
          eigen_df <- data.frame(
            Factor = 1:length(eigenvalues),
            Eigenvalue = eigenvalues
@@ -224,20 +209,35 @@ scree_plot <- ggplot(eigen_df, aes(x = Factor, y = Eigenvalue)) +
                      eigen_df = eigen_df, 
                      scree_plot = scree_plot))
 }
-
+# test
+electoral_contestation %>%
+  select(c("state_certify", "concede","criticize_election", "attend_march", "court",  "recount", "new_election", "undermine", "violent") ) %>%
+runEFA(factors = 2)
 ```
 
 ```{r}
 
-contestation_names = c("state_certify", "concede","criticize_election", "attend_march", "court",  "recount", "new_election", "undermine", "violent") 
+var = c("state_certify", "concede","criticize_election", "attend_march", "court",  "recount", "new_election", "undermine", "violent", "survey") 
+results <- list()
+for (s in unique(electoral_contestation$survey)) {
+        results[[s]] <- 
+            electoral_contestation %>%
+            filter(survey == s) 
+            print(s)
+}
 
 
-electoral_contestation %>%
-  filter(survey == "cesASU") %>% 
-  select(all_of(contestation_names))  %>%
-  select_if(~ !all(is.na(.))) %>% runEFA(factors = 2)
+runEFA(factors = 2)[[3]] + 
+            ggplot2::ggtitle(paste("Scree Plot for", s)) # Add survey title
 
 
+
+ %>%
+            runEFA(factors = 2)[[3]] + 
+            ggplot2::ggtitle(paste("Scree Plot for", s)) # Add survey title
+
+   scree_plots[[survey]] <- result$scree_plot + 
+      ggplot2::ggtitle(paste("Scree Plot for", survey)) # Add survey title
 
 
 for (s in unique(electoral_contestation$survey)) {
