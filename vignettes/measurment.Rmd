@@ -87,8 +87,6 @@ summary(fit, fit.measures = TRUE, fit.measures = TRUE)
 
 
 ```{r}
-
-
 fit <- suppressWarnings(efa(data = electoral_contestation[,c("violent",
                                                        "state_certify",
                                                        "concede",
