@@ -95,9 +95,8 @@ fit <- suppressWarnings(efa(data = electoral_contestation[,c(
                            output = "lavaan"
            ))
 
-summary(fit, fit.measures = TRUE, standardized = TRUE)[[7]] 
-
 summary(fit, fit.measures = TRUE, standardized = TRUE)
+
 ```
 
 The two factor model fits well, and the scree plots below supports a two factor solution.
@@ -113,7 +112,8 @@ fit <- suppressWarnings(efa(data = electoral_contestation[,c("violent",
                                                        "court",
                                                        "undermine",
                                                        "recount",
-                                                       "new_election")],
+                                                       "new_election",
+                                                       "certify_occupy")],
                             nfactors = 3,
                             missing = "fiml",
            ))
@@ -152,6 +152,74 @@ scree_plot
 
 The two factor makes sense here -- both eigenvalues exceed the (arbitrary) cut point and the "elbow" is also at 2. Here's the fit for a confirmatory factor model, following this structure
 
+```{r}
+  ggtheme =
+    theme(
+      plot.title =  ggplot2::element_text(face = "bold", hjust = 0, vjust = 0, colour = "#3C3C3C", size = 12),
+      axis.text.x = ggplot2::element_text(size = 12, colour = "#535353"),
+      axis.text.y = ggplot2::element_text(size = 12, colour = "#535353"),
+      axis.title =  ggplot2::element_text(size = 12, colour = "#535353"),
+      axis.title.y = ggplot2::element_text(size = 12, colour = "#535353", vjust = 1.5),
+      # Change facet
+#      strip.background = ggplot2::element_rect(fill = "#D0D0D0", colour = "#D0D0D0"),
+      axis.ticks = ggplot2::element_blank(),
+      panel.grid.major = ggplot2::element_line(colour = "#D0D0D0", size = .25),
+      panel.background = ggplot2::element_rect(fill = "white"),
+      legend.text = ggplot2::element_text(size = 10),
+      legend.title = ggplot2::element_text(size = 10),
+      # chnge facet wrap label size
+      )
+
+
+
+  # & {Subversive Contestation} & {Traditional Contestation} \\
+  # \midrule
+  # \textit{Engaging in violent acts} & -0.253 & \textbf{0.630 }\\
+  # \textit{Refusing to Concede the Election} & 0.026 & \textbf{0.885} \\
+  # \textit{Publicly criticize the integrity or fairness of the election} & \textbf{0.389 }&\textbf{ 0.649} \\
+  # \textit{Attend a march or demonstration} & \textbf{0.549 }& -0.132 \\
+  # \textit{Contest the outcome in the courts} & \textbf{0.798} & 0.129 \\
+  # \textit{Support election recounts} &\textbf{ 0.590} & 0.010 \\
+  # \textit{Call a new election} & 0.215 &\textbf{ 0.674} \\
+  # \textit{Undermine the election process} & 0.147 & \textbf{0.700} \\
+  # \textit{State officials refusing to certify the election results} & -0.004 & \textbf{0.872} \\
+  # \textit{Occupy} & -0.168 & 0.741 \\
+  # 
+
+electoral_contestation %>%
+  select(violent, state_certify, concede, criticize_election, 
+        attend_march, court, recount, new_election, 
+        undermine, certify_occupy) %>%
+  # rename the variables for clarity
+  rename(`Engage in Violence` = violent,
+         `Refuse to Certify` = state_certify,
+         `Refuse to Concede` = concede,
+         `Criticize Election` = criticize_election,
+         `Attend a\nMarch or Rally` = attend_march,
+         `Court` = court,
+         `Recounts` = recount,
+         `Call a New Election` = new_election,
+         `Undermine Integrity` = undermine,
+         `Occupy Buildings` = certify_occupy) %>%
+  # pivot long
+  pivot_longer(cols = everything(), names_to = "variable", values_to = "value")  %>%
+  ggplot(aes(x = value)) +
+  ggtheme + 
+    facet_wrap(~variable, ncol = 4) + 
+  geom_histogram(aes(y = ..density..), binwidth = 1, 
+                 fill = "grey", color = "darkgrey",
+                 alpha = 0.3) +
+  geom_density(color = "darkblue", bw = 0.5) +
+ theme(strip.text = element_text(size = 11),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
+) + 
+  labs(title = "Electoral Contestation\nDistribution of Responses",
+       x = "Disagree-Agree",
+       y = "Density")
+ggsave("electoral_contestation_histograms.png", width = 8, height = 8, dpi = 500)
+```
+
 
 ```{r}
 library(dplyr)
@@ -159,16 +227,32 @@ library(lavaan)
 library(boot)
 library(electoralContestation)
 
+
+marginal_effect_binary = function(data = data, 
+                           max = 1,
+                           min = 0,
+                           variable = "trump_voter"){
+
+  # Extract min and max values of the variable
+dat_max  = data %>%
+  mutate(!!variable := max)
+dat_min  = data %>%
+  mutate(!!variable := min)
+return(dat_max)
+}
+
 # Assuming 'electoral_contestation', 'year', 'party_identification3', and 'model' are defined
-model = "f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine  + certify_occupy     
-f2 =~  attend_march + court + recount
-f1 ~ trump_voter 
-f2 ~ trump_voter"
+model = "f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine  + certify_occupy\n    
+f2 =~  attend_march + court + recount\n"
+model = paste(model, 
+              "f1 ~", variable, "\n",
+              "f2 ~", variable
+              )
 
 electoral_contestation %>%
   mutate(post2020 = abs(as.numeric(year > 2020)),
          authoritarianism = rowMeans(electoral_contestation[, c("auth_1", "auth_2",
-                                                              "auth_3", "auth_4")], na.rm = TRUE),
+                                                               "auth_3", "auth_4")], na.rm = TRUE),
          trump_voter = ifelse((presvote_trump_2024 == 1 | presvote_trump_2020 == 1 |
                                presvote_trump_2016 == 1 | 2016 == 1), 
                               1 , 0 ),
@@ -190,23 +274,15 @@ parameter_estimates <- parameterEstimates(fit_multi) %>%
   filter((lhs == "f1"| lhs =="f2") & op == "~1") -> mean.estimates
   
   
-
-
-model = "f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine          
-f2 =~  attend_march + court + recount
-f1 ~ post2020
-f2 ~ post2020"
-
-fit_multi2 <- suppressWarnings(sem(model,
-                                 data = dat,
-                                # group = "party_identification3",
-                                # group.equal = c( "intercepts", "residuals"),
-                                 missing = "fiml"))
-
-parameter_estimates <- parameterEstimates(fit_multi2) %>%
-  filter((lhs == "f1"| lhs =="f2") &
-          (op == "~1"| op== "~" & rhs == "post2020")) %>% print()
+# Fitted values in lavaan
+lavPredict(fit_multi, newdata =  dat %>%  
+             mutate(trump_voter = 0),
+             type = "lv") %>%
+  as.data.frame() %>%
+  summarise(f1 = mean(f1), 
+            f2 = mean(f2)) -> fitted_values
   
+
 
 ```
 
