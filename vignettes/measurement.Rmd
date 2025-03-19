@@ -41,6 +41,8 @@ $\bullet$ Call a new election (AVPW1, AVPW2)
 
 $\bullet$ Undermine the election process (WSS24)
 
+
+
 Respondents were asked to rate their support for each behavior on a 5-point scale, ranging from 1 (strongly support) to 5 (strongly oppose).
 
 ## Recoding and Scaling
@@ -76,20 +78,26 @@ Here is how this is done in lavaan. Let's just print out the output for a two fa
 
 ## Two Factor Model
 ```{r}
-fit <- suppressWarnings(efa(data = electoral_contestation[,c("violent",
-                                                       "state_certify",
+fit <- suppressWarnings(efa(data = electoral_contestation[,c(
+                                                       "violent",
                                                        "concede",
                                                        "criticize_election",
                                                        "attend_march",
                                                        "court",
                                                        "recount",
                                                        "new_election",
-                                                       "undermine")],
-                            nfactors = 2,
+                                                       "undermine",
+                                                       "state_certify",
+                                                       "certify_occupy"
+                                                       )],
+                            nfactors = 3,
                             missing = "fiml",
+                           output = "lavaan"
            ))
 
-summary(fit, fit.measures = TRUE, fit.measures = TRUE)
+summary(fit, fit.measures = TRUE, standardized = TRUE)[[7]] 
+
+summary(fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 The two factor model fits well, and the scree plots below supports a two factor solution.
@@ -146,16 +154,60 @@ The two factor makes sense here -- both eigenvalues exceed the (arbitrary) cut p
 
 
 ```{r}
-model <- ' f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine
-           f2 =~  attend_march + court + recount'
+library(dplyr)
+library(lavaan)
+library(boot)
+library(electoralContestation)
+
+# Assuming 'electoral_contestation', 'year', 'party_identification3', and 'model' are defined
+model = "f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine  + certify_occupy     
+f2 =~  attend_march + court + recount
+f1 ~ trump_voter 
+f2 ~ trump_voter"
+
+electoral_contestation %>%
+  mutate(post2020 = abs(as.numeric(year > 2020)),
+         authoritarianism = rowMeans(electoral_contestation[, c("auth_1", "auth_2",
+                                                              "auth_3", "auth_4")], na.rm = TRUE),
+         trump_voter = ifelse((presvote_trump_2024 == 1 | presvote_trump_2020 == 1 |
+                               presvote_trump_2016 == 1 | 2016 == 1), 
+                              1 , 0 ),
+         trumpXauthoritarianism = trump_voter * authoritarianism
+           )  -> dat
 
 
 
-fit <- suppressWarnings(cfa(model, data = electoral_contestation,
-           missing = "fiml"
-           ))
 
-summary(fit, fit.measures = TRUE)
+# Perform multiple group CFA with measurement invariance constraints
+fit_multi <- suppressWarnings(sem(model,
+                                 data = dat,
+                               # group = "trump_voter",
+                               # group.equal = c("loadings", "intercepts", "residuals"),
+                                 missing = "fiml"))
+
+# Extract parameter estimates
+parameter_estimates <- parameterEstimates(fit_multi) %>%
+  filter((lhs == "f1"| lhs =="f2") & op == "~1") -> mean.estimates
+  
+  
+
+
+model = "f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine          
+f2 =~  attend_march + court + recount
+f1 ~ post2020
+f2 ~ post2020"
+
+fit_multi2 <- suppressWarnings(sem(model,
+                                 data = dat,
+                                # group = "party_identification3",
+                                # group.equal = c( "intercepts", "residuals"),
+                                 missing = "fiml"))
+
+parameter_estimates <- parameterEstimates(fit_multi2) %>%
+  filter((lhs == "f1"| lhs =="f2") &
+          (op == "~1"| op== "~" & rhs == "post2020")) %>% print()
+  
+
 ```
 
 The fit is quite good. 
@@ -296,6 +348,7 @@ Note how items like "undermine" and "violent" correlated with "new election" but
 The groups are 1 = Democrat, 2 = Independent, 3 = Republican. Republicans score highest on both forms of contestation.
 
 ```{r}
+library(lavaan)
 # Multiple Group Model
 model <- ' f1 =~ violent + state_certify + concede +  criticize_election + new_election + undermine
            f2 =~  attend_march + court + recount'
@@ -304,7 +357,7 @@ suppressWarnings(cfa(model,
                             data = electoral_contestation,
                             missing = "fiml",
                             group = "party_identification3",
-                           group.equal = c("loadings", "intercepts", "residuals")
+#                           group.equal = c("loadings", "intercepts", "residuals")
            )) %>% summary(fit.measures = TRUE)
 
 ```

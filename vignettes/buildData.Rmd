@@ -57,6 +57,7 @@ avp23 <- avp23 %>%
          year = 2023,
          survey = "avpw1",
          prepost = "post",
+         party_identification = pid7 # recode to 3 categories
          )
 head(avp23)
 ```        
@@ -154,7 +155,9 @@ avp24 <- avp24 %>%
          state = "4",
          year = 2024,
          survey = "avpw2",
-         prepost = "post"
+         prepost = "post",
+         party_identification = pid7, # recode to 3 categories
+         
          )
 ## Code Survey items
 recode_rules <- list(
@@ -257,7 +260,9 @@ wss20 <- wss20 %>%
          post_election = ifelse(DATE > "2020-11-03", 1, 0),
          post_call = ifelse(DATE >= "2020-11-07", 1, 0),
          uncertainty = ifelse(DATE > "2020-11-03", 1, 0),
-         prepost = ifelse(DATE > "2020-11-03", "pre", "post")
+         prepost = ifelse(DATE > "2020-11-03", "pre", "post"),
+         party_identification = pid7, # recode to 3 categories
+
   )
 
        
@@ -418,6 +423,7 @@ wss24 <- wss24 %>%
          trustSC = as.numeric(WSS022_c)/100,
          trustGovernment = as.numeric(WSS022_d)/100,
          trustStateleg = as.numeric(WSS022_e)/100,
+
          )
 
 
@@ -441,6 +447,10 @@ recode_rules <- list(
   list(column = "WSS013_d", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_4"),
   list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
                                            "5" = 3, "6" = 3, "7" = 3),   new_column = "party_identification3"),
+  list(column = "pid7", recode_rules = c("1" = 0, "2" = 0, "3" = 0, "4" = 0,
+                                               "5" = 0, "6" = 1),   new_column = "trustPresident"),
+  
+  
   list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
                                                "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
                                                "10" = 0, "11" = 0, "12" = 0),   new_column =
@@ -493,6 +503,8 @@ cesASU <- cesASU %>%
          state = as.character(inputstate),
          year = 2023,
          survey = "cesASU",
+         party_identification = pid7, # recode to 3 categories
+
 )
     
 ## Code Survey items -- follows pre-post test design
@@ -617,7 +629,9 @@ cesBYU <- cesBYU %>%
                                              ifelse(BYU311_rand == "Option B: Participate", "participate_condition",
                                                     NA)),
          year = 2023,
-         survey = "cesBYU"
+         survey = "cesBYU",
+        party_identification = pid7, # recode to 3 categories
+
 )
 ## Code Survey items
 recode_rules <- list(
