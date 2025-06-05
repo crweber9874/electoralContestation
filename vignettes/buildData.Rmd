@@ -29,6 +29,8 @@ cesBYU <- read.dta13("2022 CES BYU.dta")
 wss24 <- read.dta13("2024 WSS.dta")
 avp23 <- read_sav("UARZ0003_OUTPUT.sav")
 avp24 <- read_sav("UARZ0004_OUTPUT.sav")
+cesBYU24 <- read_sav("CCES24_BYU_OUTPUT.sav")
+
 ```
 
 Recode each data set with a minimal set of common demographic variables.
@@ -702,6 +704,106 @@ cesBYU <- cesBYU %>%
   select(all_of(new_columns))
 #
 ```
+
+```{r}
+original_columns <- names(cesBYU)
+
+cesBYU <- cesBYU %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2023 - birthyr,
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8 & as.numeric(faminc_new) < 100, 1, 0),
+         caseidID = caseid,
+         state = as.character(inputstate),
+         experimental_condition_post = ifelse(BYU411_rand == "BYU4Xa", "Control", 
+                                      ifelse(BYU411_rand == "BYU4Xb", "Fraud", 
+                                          ifelse(BYU411_rand == "BYU4Xc", "Norms",  
+                                                 NA))),
+         experimental_condition_pre = ifelse(BYU311_rand == "Option A: Support or Oppose", "support_condition",
+                                             ifelse(BYU311_rand == "Option B: Participate", "participate_condition",
+                                                    NA)),
+         year = 2023,
+         survey = "cesBYU"
+
+)
+## Code Survey items
+recode_rules <- list(
+  list(column = "BYU767_1", recode_rules = c("1" = 1, "2" = 0),   new_column = "polButton"),
+  list(column = "BYU767_2", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSign"),
+  list(column = "BYU767_3", recode_rules = c("1" = 1, "2" = 0),   new_column = "polPersuade"),
+  list(column = "BYU767_4", recode_rules = c("1" = 1, "2" = 0),   new_column = "polTalk"),
+  list(column = "BYU767_5", recode_rules = c("1" = 1, "2" = 0),   new_column = "polEmail"),
+  list(column = "BYU767_6", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeme"),
+  list(column = "BYU767_7", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeme_create"),
+  list(column = "BYU90", recode_rules = c("1" = 1, "2" = 1, "3" = 2,
+                                             "4" = 3, "5" = 4, "6" = 5,
+                                             "7" = 5),   new_column = "internal_efficacy"),
+  list(column = "BYU100N", recode_rules = c("1" = 1, "2" = 1, "3" = 2,
+                                             "4" = 3, "5" = 4, "6" = 5,
+                                             "7" = 5),   new_column = "external_efficacy"),
+
+  # The pretest, conditions 1 and 2
+  list(column = "BYU311a", recode_rules = five_n,   new_column = "attend_march1"),
+  list(column = "BYU312a", recode_rules = five_n,   new_column = "burn_flag1"),
+  list(column = "BYU313a", recode_rules = five_n,   new_column = "court1"),
+  list(column = "BYU314a", recode_rules = five_n,   new_column = "recount1"),
+  list(column = "BYU315a", recode_rules = five_n,   new_column = "criticize_election1"),
+  list(column = "BYU316a", recode_rules = five_n,   new_column = "violent1"),
+  list(column = "BYU311b", recode_rules = five_n,   new_column = "attend_march2"),
+  list(column = "BYU312b", recode_rules = five_n,   new_column = "burn_flag2"),
+  list(column = "BYU313b", recode_rules = five_n,   new_column = "court2"),
+  list(column = "BYU314b", recode_rules = five_n,   new_column = "recount2"),
+  list(column = "BYU315b", recode_rules = five_n,   new_column = "criticize_election2"),
+  list(column = "BYU316b", recode_rules = five_n,   new_column = "violent2"),
+  # And there is an indicator called BYU311a_rand
+# This constitutes the post test  
+  list(column = "BYU411", recode_rules = five_r,   new_column = "attend_marchp"),
+  list(column = "BYU412", recode_rules = five_r,   new_column = "burn_flagp"),
+  list(column = "BYU413", recode_rules = five_r,   new_column = "courtp"),
+  list(column = "BYU414", recode_rules = five_r,   new_column = "recountp"),
+
+# And there is another variable called BYU411_rand
+
+  list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party_identification3"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5, "6" = 6, "7" = 7), new_column = 
+         "party_identification7"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+                                             "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideology5"),
+  list(column = "presvote20post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2020"),
+  list(column = "presvote16post", recode_rules = c("1" = 0, "2" = 1),  
+       new_column = "presvote_trump_2016")
+)
+cesBYU = recodeList(cesBYU, recode_rules) 
+# Only save the newly created ones
+
+
+cesBYU %>%
+  mutate(attend_march = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         burn_flag = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         recount = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         criticize_election = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         attend_march = ifelse( experimental_condition_post == "Control", attend_march1, NA),
+         court = ifelse( experimental_condition_post == "Control", attend_march1, NA)) -> cesBYU
+         
+new_columns <- names(cesBYU)
+new_columns <- setdiff(new_columns, original_columns)
+cesBYU <- cesBYU %>% 
+  select(all_of(new_columns))
+```
+
+
 
 
 ```{r}
