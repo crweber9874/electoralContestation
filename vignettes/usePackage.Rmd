@@ -67,6 +67,7 @@ There were two panels in our original paper. I've basically recreated these, but
 ### Plotting
 There are two main plotting functions, `ggPoint_categorical` and `ggMargins`. The `ggPoint_categorical` will plot the category point estimates, along with a rug plot. These require two datasets, the original data for the rug plot and the posterior means for the point estimates. The `ggMargins` function will plot the marginal effects, along with a rug plot. These also require two datasets, the original data for the rug plot and the posterior means for the point estimates.
 
+The plots are customizable; view `?ggPoint_categories`
 
 ```{r}
 # plot the point predictions for all combinations, coloring the category label using ggplot
@@ -82,19 +83,18 @@ ggPoint_categories(
   rug_jitter_height = 0.10,
   rug_side = "t",
   y_axis_limits = c(0, 1),
- ) 
-
+  title = "Ballot Recounts",
+  rug_color = "grey"
+ ) -> plot1
+plot1
 ```
-The rug plot on the side of the plot shows the marginal distribution of the dependent variable, across the pre-post condition. 
+`posterior_pme` returns the 
 
-```{r}
-ggPoint_categorical(plot_dat,side_plot)
-```
 ```{r}
 library(tidybayes)
 mvar = "presvote_trump_2020"
 xvar = "prepost"
-posterior_pme(model = burn_flag, 
+posterior_pme(model = recount, 
                          xvar = "prepost",
                          mvar = "presvote_trump_2020",
                          mrange =  c(0, 1),
@@ -103,7 +103,9 @@ posterior_pme(model = burn_flag,
                                   labels = c("Strongly Oppose", "Oppose", "Neutral", "Support", "Strongly Support")),
     presvote_trump_2020 = factor(presvote_trump_2020, levels = c("0", "1"), labels = c("Trump Voter", "Biden Voter"))) -> plot_dat
 
-ggMargins_categorical() -> plot2
+ggMargins_categorical(point_color_values = c("lightgrey", "black"),
+) -> plot2
+print(plot2)
 ```
 
 

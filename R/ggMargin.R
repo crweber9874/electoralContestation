@@ -55,7 +55,7 @@ ggMargins_categorical <- function(data = plot_dat,
       ggplot2::geom_point(size = point_size, position = position_dodge(width = point_distance), alpha = point_opacity) +
       ggplot2::geom_errorbar(width = 0.15,  position = position_dodge(width = point_distance),  alpha = bar_opacity, colour = "black") +
       ggplot2::ggtitle(title) +
-      ggplot2::scale_x_discrete("Response") +
+      ggplot2::scale_x_discrete("") +
       ggplot2::scale_y_continuous(ytitle, limits = ylimits) +
       ggplot2::geom_hline(yintercept = 0, colour = "black", linetype = "dashed") +
       ggplot2::coord_flip() +
