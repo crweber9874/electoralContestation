@@ -20,7 +20,8 @@ Imports:
   tidyr,
   stringr,
   ggExtra,
-  devtools
+  devtools,
+  tidybayes
 Suggests:
   knitr,
   rmarkdown
