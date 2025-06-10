@@ -79,6 +79,7 @@ ggPoint_categorical <- function(plot_dat,
                                 rug_size = 0.3,
                                 rug_length = grid::unit(0.05, "npc"), # units::unit
                                 rug_color = "lightgrey",
+                                y_axis_limits = c(0,1))
                                 ...) {
 
   # --- Input Validation (optional but good practice) ---
@@ -133,7 +134,7 @@ ggPoint_categorical <- function(plot_dat,
     ggplot2::coord_flip() +
 
     ggplot2::ggtitle(title) +
-    ggplot2::scale_y_continuous(y_axis_title, limits = c(0,1)) +
+    ggplot2::scale_y_continuous(y_axis_title, limits = y_axis_limits) +
     ggplot2::scale_x_discrete(x_axis_title) +
 
     ggplot2::scale_colour_manual(
