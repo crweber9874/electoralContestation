@@ -86,7 +86,7 @@ package <code>devtools</code> and then using that to install from my
 <pre><code><span><span class="co">## Installing packages into '/home/runner/.cache/R/renv/library/electoralContestation-99ca6cb9/linux-ubuntu-noble/R-4.5/x86_64-pc-linux-gnu'</span></span>
 <span><span class="co">## (as 'lib' is unspecified)</span></span></code></pre>
 <pre><code><span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="color: #00BBBB;">R CMD build</span> <span style="color: #00BBBB;">─────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">## * checking for file ‘/tmp/RtmppStAg7/remotes20875ffc15ac/crweber9874-electoralContestation-9ae8dc0/DESCRIPTION’ ... OK</span></span>
+<span><span class="co">## * checking for file ‘/tmp/RtmpSMR115/remotes211252aaa064/crweber9874-electoralContestation-d7c45d0/DESCRIPTION’ ... OK</span></span>
 <span><span class="co">## * preparing ‘electoralContestation’:</span></span>
 <span><span class="co">## * checking DESCRIPTION meta-information ... OK</span></span>
 <span><span class="co">## * checking for LF line-endings in source and make files and shell scripts</span></span>
@@ -165,9 +165,269 @@ previous step.</p></li>
 <code>ggPoint</code> function generates a point estimate plot with a rug
 plot of the dependent variable distribution, while the
 <code>ggMargins</code> function generates a marginal effects plot with a
-rug plot of the dependent variable distribution. These functions are
-used to visualize the predictions genera</p></li>
+rug plot of the dependent variable distribution.</p></li>
 </ul>
+<div class="section level3">
+<h3 id="modeling">Modeling<a class="anchor" aria-label="anchor" href="#modeling"></a>
+</h3>
+<p>Assume “Contest the outcome in the courts” is the DV and we’re
+examining winner/loser effects. The moderator variable is the vote for
+Trump in 2020, and the independent variable is the pre-post
+condition.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paul-buerkner/brms" class="external-link">brms</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Loading required package: Rcpp</span></span></code></pre>
+<pre><code><span><span class="co">## Loading 'brms' package (version 2.22.0). Useful instructions</span></span>
+<span><span class="co">## can be found by typing help('brms'). A more detailed introduction</span></span>
+<span><span class="co">## to the package is available through vignette('brms_overview').</span></span></code></pre>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Attaching package: 'brms'</span></span></code></pre>
+<pre><code><span><span class="co">## The following objects are masked from 'package:tidybayes':</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##     dstudent_t, pstudent_t, qstudent_t, rstudent_t</span></span></code></pre>
+<pre><code><span><span class="co">## The following object is masked from 'package:stats':</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##     ar</span></span></code></pre>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">IV</span> <span class="op">&lt;-</span> <span class="st">"presvote_trump_2020 + prepost + presvote_trump_2020:prepost + college"</span></span>
+<span><span class="co"># Policy Politics Models</span></span>
+<span><span class="va">recount</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/brms.ordinal.html">brms.ordinal</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">electoral_contestation</span>, IV <span class="op">=</span> <span class="va">IV</span>, DV <span class="op">=</span> <span class="st">"recount"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: Rows containing NAs were excluded from the model.</span></span></code></pre>
+<pre><code><span><span class="co">## Compiling Stan program...</span></span></code></pre>
+<pre><code><span><span class="co">## Start sampling</span></span></code></pre>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Gradient evaluation took 0.000503 seconds</span></span>
+<span><span class="co">## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 5.03 seconds.</span></span>
+<span><span class="co">## Chain 1: Adjust your expectations accordingly!</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)</span></span>
+<span><span class="co">## Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)</span></span>
+<span><span class="co">## Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)</span></span>
+<span><span class="co">## Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)</span></span>
+<span><span class="co">## Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)</span></span>
+<span><span class="co">## Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)</span></span>
+<span><span class="co">## Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## Chain 1:  Elapsed Time: 7.288 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 1:                7.126 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 1:                14.414 seconds (Total)</span></span>
+<span><span class="co">## Chain 1: </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).</span></span>
+<span><span class="co">## Chain 2: </span></span>
+<span><span class="co">## Chain 2: Gradient evaluation took 0.000489 seconds</span></span>
+<span><span class="co">## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 4.89 seconds.</span></span>
+<span><span class="co">## Chain 2: Adjust your expectations accordingly!</span></span>
+<span><span class="co">## Chain 2: </span></span>
+<span><span class="co">## Chain 2: </span></span>
+<span><span class="co">## Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)</span></span>
+<span><span class="co">## Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)</span></span>
+<span><span class="co">## Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)</span></span>
+<span><span class="co">## Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)</span></span>
+<span><span class="co">## Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)</span></span>
+<span><span class="co">## Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)</span></span>
+<span><span class="co">## Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)</span></span>
+<span><span class="co">## Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)</span></span>
+<span><span class="co">## Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)</span></span>
+<span><span class="co">## Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)</span></span>
+<span><span class="co">## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)</span></span>
+<span><span class="co">## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 2: </span></span>
+<span><span class="co">## Chain 2:  Elapsed Time: 7.476 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 2:                7.158 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 2:                14.634 seconds (Total)</span></span>
+<span><span class="co">## Chain 2: </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).</span></span>
+<span><span class="co">## Chain 3: </span></span>
+<span><span class="co">## Chain 3: Gradient evaluation took 0.000503 seconds</span></span>
+<span><span class="co">## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 5.03 seconds.</span></span>
+<span><span class="co">## Chain 3: Adjust your expectations accordingly!</span></span>
+<span><span class="co">## Chain 3: </span></span>
+<span><span class="co">## Chain 3: </span></span>
+<span><span class="co">## Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)</span></span>
+<span><span class="co">## Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)</span></span>
+<span><span class="co">## Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)</span></span>
+<span><span class="co">## Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)</span></span>
+<span><span class="co">## Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)</span></span>
+<span><span class="co">## Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)</span></span>
+<span><span class="co">## Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)</span></span>
+<span><span class="co">## Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)</span></span>
+<span><span class="co">## Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)</span></span>
+<span><span class="co">## Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)</span></span>
+<span><span class="co">## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)</span></span>
+<span><span class="co">## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 3: </span></span>
+<span><span class="co">## Chain 3:  Elapsed Time: 7.219 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 3:                7.108 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 3:                14.327 seconds (Total)</span></span>
+<span><span class="co">## Chain 3: </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).</span></span>
+<span><span class="co">## Chain 4: </span></span>
+<span><span class="co">## Chain 4: Gradient evaluation took 0.000504 seconds</span></span>
+<span><span class="co">## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 5.04 seconds.</span></span>
+<span><span class="co">## Chain 4: Adjust your expectations accordingly!</span></span>
+<span><span class="co">## Chain 4: </span></span>
+<span><span class="co">## Chain 4: </span></span>
+<span><span class="co">## Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)</span></span>
+<span><span class="co">## Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)</span></span>
+<span><span class="co">## Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)</span></span>
+<span><span class="co">## Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)</span></span>
+<span><span class="co">## Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)</span></span>
+<span><span class="co">## Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)</span></span>
+<span><span class="co">## Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)</span></span>
+<span><span class="co">## Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)</span></span>
+<span><span class="co">## Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)</span></span>
+<span><span class="co">## Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)</span></span>
+<span><span class="co">## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)</span></span>
+<span><span class="co">## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)</span></span>
+<span><span class="co">## Chain 4: </span></span>
+<span><span class="co">## Chain 4:  Elapsed Time: 7.58 seconds (Warm-up)</span></span>
+<span><span class="co">## Chain 4:                7.282 seconds (Sampling)</span></span>
+<span><span class="co">## Chain 4:                14.862 seconds (Total)</span></span>
+<span><span class="co">## Chain 4:</span></span></code></pre>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">recount</span></span></code></pre></div>
+<pre><code><span><span class="co">##  Family: cumulative </span></span>
+<span><span class="co">##   Links: mu = logit; disc = identity </span></span>
+<span><span class="co">## Formula: recount ~ presvote_trump_2020 + prepost + presvote_trump_2020:prepost + college </span></span>
+<span><span class="co">##    Data: data (Number of observations: 4468) </span></span>
+<span><span class="co">##   Draws: 4 chains, each with iter = 2000; warmup = 1000; thin = 1;</span></span>
+<span><span class="co">##          total post-warmup draws = 4000</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Regression Coefficients:</span></span>
+<span><span class="co">##                                Estimate Est.Error l-95% CI u-95% CI Rhat</span></span>
+<span><span class="co">## Intercept[1]                      -2.82      0.08    -2.97    -2.67 1.00</span></span>
+<span><span class="co">## Intercept[2]                      -1.87      0.06    -1.99    -1.76 1.00</span></span>
+<span><span class="co">## Intercept[3]                      -0.53      0.05    -0.63    -0.43 1.00</span></span>
+<span><span class="co">## Intercept[4]                       1.33      0.05     1.22     1.43 1.00</span></span>
+<span><span class="co">## presvote_trump_2020                0.47      0.06     0.35     0.59 1.00</span></span>
+<span><span class="co">## prepostpre                        -0.53      0.09    -0.71    -0.35 1.00</span></span>
+<span><span class="co">## college                            0.11      0.06     0.00     0.23 1.00</span></span>
+<span><span class="co">## presvote_trump_2020:prepostpre     0.92      0.16     0.59     1.26 1.00</span></span>
+<span><span class="co">##                                Bulk_ESS Tail_ESS</span></span>
+<span><span class="co">## Intercept[1]                       3581     2718</span></span>
+<span><span class="co">## Intercept[2]                       4122     3253</span></span>
+<span><span class="co">## Intercept[3]                       4377     2790</span></span>
+<span><span class="co">## Intercept[4]                       4503     3264</span></span>
+<span><span class="co">## presvote_trump_2020                4673     2833</span></span>
+<span><span class="co">## prepostpre                         3948     3192</span></span>
+<span><span class="co">## college                            5359     2679</span></span>
+<span><span class="co">## presvote_trump_2020:prepostpre     3737     3021</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Further Distributional Parameters:</span></span>
+<span><span class="co">##      Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS</span></span>
+<span><span class="co">## disc     1.00      0.00     1.00     1.00   NA       NA       NA</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS</span></span>
+<span><span class="co">## and Tail_ESS are effective sample size measures, and Rhat is the potential</span></span>
+<span><span class="co">## scale reduction factor on split chains (at convergence, Rhat = 1).</span></span></code></pre>
+<p>This function just estimates the model, and returns the summary of
+the model. The <code>IV</code> variable is the independent variable, and
+the <code>DV</code> variable is the dependent variable. The
+<code>IV</code> variable is specified as a formula, so that higher order
+interactions can easily be specified.</p>
+</div>
+<div class="section level3">
+<h3 id="prediction">Prediction<a class="anchor" aria-label="anchor" href="#prediction"></a>
+</h3>
+<p>Now, we can extract any prediction from the model, simply by
+declaring the <code>xvar</code> and <code>mvar</code> variables. The
+<code>xvar</code> variable is the independent variable, and the
+<code>mvar</code> variable is the moderator variable. Additional
+variables in the model are set to the their mean value. This part may be
+a little buggy, as I’m just using dichotomous predictions. You can
+absolutely use continuous variables here, but I’ve only built this to
+include and present the a 2x2 winner/loser interaction. Basically, this
+just creates a data frame of posterior means.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
+<span><span class="va">xvar</span> <span class="op">=</span> <span class="st">"presvote_trump_2020"</span></span>
+<span><span class="va">mvar</span> <span class="op">=</span> <span class="st">"prepost"</span></span>
+<span><span class="fu"><a href="../reference/posterior_means.html">posterior_means</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">recount</span>, </span>
+<span>                mval <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pre"</span>, <span class="st">"post"</span><span class="op">)</span>, </span>
+<span>                xval <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op">-&gt;</span> <span class="va">plot_dat</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "categorical or cumulative"</span></span></code></pre>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">plot_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># Groups:   presvote_trump_2020, prepost [2]</span></span></span>
+<span><span class="co">##   presvote_trump_2020 prepost .category   mean  lower  upper</span></span>
+<span><span class="co">##                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span>                   0 post    1         0.054<span style="text-decoration: underline;">1</span> 0.047<span style="text-decoration: underline;">0</span> 0.062<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span>                   0 post    2         0.074<span style="text-decoration: underline;">2</span> 0.065<span style="text-decoration: underline;">6</span> 0.083<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span>                   0 post    3         0.231  0.216  0.246 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span>                   0 post    4         0.424  0.409  0.438 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span>                   0 post    5         0.217  0.202  0.232 </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">6</span>                   0 pre     1         0.088<span style="text-decoration: underline;">3</span> 0.073<span style="text-decoration: underline;">5</span> 0.105</span></span></code></pre>
+<p>There were two panels in our original paper. I’ve basically recreated
+these, but with a categorical dependent variable. I’ve also added the
+rug plot, which alongisde the point predictions and marginal effects,
+shows the distribution in each faceted category.</p>
+</div>
+<div class="section level3">
+<h3 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a>
+</h3>
+<p>There are two main plotting functions,
+<code>ggPoint_categorical</code> and <code>ggMargins</code>. The
+<code>ggPoint_categorical</code> will plot the category point estimates,
+along with a rug plot. These require two datasets, the original data for
+the rug plot and the posterior means for the point estimates. The
+<code>ggMargins</code> function will plot the marginal effects, along
+with a rug plot. These also require two datasets, the original data for
+the rug plot and the posterior means for the point estimates.</p>
+<p>The plots are customizable; view <code><a href="../reference/ggPoint_categories.html">?ggPoint_categories</a></code></p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># plot the point predictions for all combinations, coloring the category label using ggplot</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/daattali/ggExtra" class="external-link">ggExtra</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/ggPoint_categories.html">ggPoint_categories</a></span><span class="op">(</span></span>
+<span>  plot_dat <span class="op">=</span> <span class="va">plot_dat</span>,</span>
+<span>  raw_data_for_rug <span class="op">=</span> <span class="va">electoral_contestation</span>,</span>
+<span>  dv_col_name <span class="op">=</span> <span class="st">"recount"</span>,</span>
+<span>  rug_size <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  rug_length <span class="op">=</span> <span class="fu">grid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="st">"npc"</span><span class="op">)</span>, <span class="co"># units::unit</span></span>
+<span>  rug_jitter_height <span class="op">=</span> <span class="fl">0.10</span>,</span>
+<span>  rug_side <span class="op">=</span> <span class="st">"t"</span>,</span>
+<span>  y_axis_limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  title <span class="op">=</span> <span class="st">"Ballot Recounts"</span>,</span>
+<span>  rug_color <span class="op">=</span> <span class="st">"grey"</span></span>
+<span> <span class="op">)</span> <span class="op">-&gt;</span> <span class="va">plot1</span></span>
+<span><span class="va">plot1</span></span></code></pre></div>
+<p><img src="usePackage_files/figure-html/unnamed-chunk-6-1.png" width="700"><code>posterior_pme</code> returns the</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mjskay.github.io/tidybayes/" class="external-link">tidybayes</a></span><span class="op">)</span></span>
+<span><span class="va">mvar</span> <span class="op">=</span> <span class="st">"presvote_trump_2020"</span></span>
+<span><span class="va">xvar</span> <span class="op">=</span> <span class="st">"prepost"</span></span>
+<span><span class="fu"><a href="../reference/posterior_pme.html">posterior_pme</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">recount</span>, </span>
+<span>                         xvar <span class="op">=</span> <span class="st">"prepost"</span>,</span>
+<span>                         mvar <span class="op">=</span> <span class="st">"presvote_trump_2020"</span>,</span>
+<span>                         mrange <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                         xrange <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pre"</span>, <span class="st">"post"</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>        <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>.category <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">.category</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>, <span class="st">"4"</span>, <span class="st">"5"</span><span class="op">)</span>, </span>
+<span>                                  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Strongly Oppose"</span>, <span class="st">"Oppose"</span>, <span class="st">"Neutral"</span>, <span class="st">"Support"</span>, <span class="st">"Strongly Support"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    presvote_trump_2020 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">presvote_trump_2020</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span>, <span class="st">"1"</span><span class="op">)</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Trump Voter"</span>, <span class="st">"Biden Voter"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="va">plot_dat</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/ggMargins_categories.html">ggMargins_categories</a></span><span class="op">(</span>point_color_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lightgrey"</span>, <span class="st">"black"</span><span class="op">)</span>,</span>
+<span><span class="op">)</span> <span class="op">-&gt;</span> <span class="va">plot2</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot2</span><span class="op">)</span></span></code></pre></div>
+<p><img src="usePackage_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
+<span>  <span class="va">plot1</span> <span class="op">+</span> <span class="va">plot2</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>widths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="usePackage_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
