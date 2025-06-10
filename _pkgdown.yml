@@ -1,6 +1,9 @@
-url: ~
+url: https://crweber9874.github.io/electoralContestation/
 template:
   bootstrap: 5
   params:
-    logo: "inst/figures/logo.png"
+  logo: "inst/figures/logo.png"
+
+
+
 
