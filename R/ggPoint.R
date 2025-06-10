@@ -79,7 +79,7 @@ ggPoint_categorical <- function(plot_dat,
                                 rug_size = 0.3,
                                 rug_length = grid::unit(0.05, "npc"), # units::unit
                                 rug_color = "lightgrey",
-                                y_axis_limits = c(0,1))
+                                y_axis_limits = c(0,1),
                                 ...) {
 
   # --- Input Validation (optional but good practice) ---
