@@ -21,7 +21,9 @@ Imports:
   stringr,
   ggExtra,
   devtools,
-  tidybayes
+  tidybayes,
+  brms,
+  patchwork
 Suggests:
   knitr,
   rmarkdown
