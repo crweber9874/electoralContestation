@@ -18,6 +18,7 @@ There are sample data in repository to avoid needing to download, recode, etc fr
 ```{r}
 library(electoralContestation)
 library(dplyr)
+library(tidybayes)
 electoral_contestation %>% head()
 ```
 ## Estimation Steps
@@ -35,7 +36,7 @@ The package is meant to help with the analytic workflow. I've organized the func
 Assume "Contest the outcome in the courts" is the DV and we're examining winner/loser effects. The moderator variable is the vote for Trump in 2020, and the independent variable is the pre-post condition.
 
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}}
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(brms)
 IV <- "presvote_trump_2020 + prepost + presvote_trump_2020:prepost + college"
 # Policy Politics Models
@@ -103,7 +104,7 @@ posterior_pme(model = recount,
                                   labels = c("Strongly Oppose", "Oppose", "Neutral", "Support", "Strongly Support")),
     presvote_trump_2020 = factor(presvote_trump_2020, levels = c("0", "1"), labels = c("Trump Voter", "Biden Voter"))) -> plot_dat
 
-ggMargins_categorical(point_color_values = c("lightgrey", "black"),
+ggMargins_categories(point_color_values = c("lightgrey", "black"),
 ) -> plot2
 print(plot2)
 ```
@@ -111,7 +112,8 @@ print(plot2)
 
 ```{r}
 library(patchwork)
-  plot1 + plot2
+  plot1 + plot2 + 
+  plot_layout(widths = c(2, 1))
 ```
 
 
