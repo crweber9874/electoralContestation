@@ -17,6 +17,7 @@ devtools::install_github("crweber9874/electoralContestation")
 There are sample data in repository to avoid needing to download, recode, etc from your local machine. This needs some updating, as the data build is the data for the 2025 MPSA meeting and does not yet include the newer BYU CES data
 ```{r}
 library(electoralContestation)
+library(dplyr)
 electoral_contestation %>% head()
 ```
 ## Estimation Steps
@@ -39,8 +40,12 @@ library(brms)
 IV <- "presvote_trump_2020 + prepost + presvote_trump_2020:prepost + college"
 # Policy Politics Models
 recount   <- brms.ordinal(data = electoral_contestation, IV = IV, DV = "recount")
-summary(model_attend_march)
 ```
+
+```{r}
+recount
+```
+
 
 This function just estimates the model, and returns the summary of the model. The `IV` variable is the independent variable, and the `DV` variable is the dependent variable. The `IV` variable is specified as a formula, so that higher order interactions can easily be specified.
 
@@ -49,15 +54,17 @@ This function just estimates the model, and returns the summary of the model. Th
 Now, we can extract any prediction from the model, simply by declaring the `xvar` and `mvar` variables. The `xvar` variable is the independent variable, and the `mvar` variable is the moderator variable. Additional variables in the model are set to the their mean value. This part may be a little buggy, as I'm just using dichotomous predictions. You can absolutely use continuous variables here, but I've only built this to include and present the a 2x2 winner/loser interaction. Basically, this just creates a data frame of posterior means. 
 
 ```{r}
+library(tidyr)
 xvar = "presvote_trump_2020"
 mvar = "prepost"
-posterior_means(model = recount, mval =  c("pre", "post"), xval = c(0, 1))  -> plot_dat
+posterior_means(model = recount, 
+                mval =  c("pre", "post"), 
+                xval = c(0, 1))  -> plot_dat
 plot_dat %>% head()
 ```
 There were two panels in our original paper. I've basically recreated these, but with a categorical dependent variable. I've also added the rug plot, which alongisde the point predictions and marginal effects, shows the distribution in each faceted category.
 
 ### Plotting
-
 There are two main plotting functions, `ggPoint_categorical` and `ggMargins`. The `ggPoint_categorical` will plot the category point estimates, along with a rug plot. These require two datasets, the original data for the rug plot and the posterior means for the point estimates. The `ggMargins` function will plot the marginal effects, along with a rug plot. These also require two datasets, the original data for the rug plot and the posterior means for the point estimates.
 
 
@@ -71,7 +78,9 @@ ggPoint_categorical(
   raw_data_for_rug = electoral_contestation,
   dv_col_name = "recount",
   rug_size = 0.1,
-  rug_length = grid::unit(0.01, "npc"), # units::unit
+  rug_length = grid::unit(0.05, "npc"), # units::unit
+  rug_jitter_height = 0.10,
+  rug_side = "t"
  ) 
 
 ```
