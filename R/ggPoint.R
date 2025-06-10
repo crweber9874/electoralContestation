@@ -53,7 +53,7 @@
 #' @param ... Additional arguments passed to `ggplot2::facet_wrap()`.
 #' @return A `ggplot` object.
 #' @export
-ggPoint_categorical <- function(plot_dat,
+ggPoint_categorical_t <- function(plot_dat,
                                 raw_data_for_rug,
                                 dv_col_name = "burn_flag",
                                 facet_col_name = "presvote_trump_2020",
@@ -133,7 +133,7 @@ ggPoint_categorical <- function(plot_dat,
     ggplot2::coord_flip() +
 
     ggplot2::ggtitle(title) +
-    ggplot2::scale_y_continuous(y_axis_title) +
+    ggplot2::scale_y_continuous(y_axis_title, limits = c(0,1)) +
     ggplot2::scale_x_discrete(x_axis_title) +
 
     ggplot2::scale_colour_manual(
@@ -152,3 +152,5 @@ ggPoint_categorical <- function(plot_dat,
 
   return(plot)
 }
+
+

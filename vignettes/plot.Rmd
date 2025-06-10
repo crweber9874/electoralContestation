@@ -1,0 +1,106 @@
+---
+title: "Navigating the electoralContestation Package"
+output: html_document
+---
+
+
+## Build
+
+You can build the package from `github` by installing the package `devtools` and then using that to install from my `github` repository
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+#install.packages('devtools')
+devtools::install_github("crweber9874/electoralContestation")
+```
+
+## Data
+There are sample data in repository to avoid needing to download, recode, etc from your local machine. This needs some updating, as the data build is the data for the 2025 MPSA meeting and does not yet include the newer BYU CES data
+```{r}
+library(electoralContestation)
+electoral_contestation %>% head()
+```
+## Estimation Steps
+
+The package is meant to help with the analytic workflow. I've organized the functions thematically:
+
+* `modeling`: There are three main modeling functions, `brms.ordinal`, `brms.linear` and `brms.nominal`. These are used to estimate ordinal, linear and nominal models, respectively. The `IV` variable is the independent variable, and the `DV` variable is the dependent variable. The `IV` variable is specified as a formula, so that higher order interactions can easily be specified. Thus far, I've only implemented the `brms.ordinal` function, so we can modify this one to our needs and then I'll update the others.
+
+* `prediction`: There are two main prediction functions, `posterior_means` and `posterior_pme`. The `posterior_means` function generates posterior predictions with two-way interactions, while the `posterior_pme` function generates posterior predictions with marginal effects. These functions are used to generate predictions from the models estimated in the previous step.
+
+* `plotting`: There are two main plotting functions, `ggPoint` and `ggMargins`. The `ggPoint` function generates a point estimate plot with a rug plot of the dependent variable distribution, while the `ggMargins` function generates a marginal effects plot with a rug plot of the dependent variable distribution. These functions are used to visualize the predictions generated in the previous step.
+
+### Modeling 
+
+Assume "Contest the outcome in the courts" is the DV and we're examining winner/loser effects. The moderator variable is the vote for Trump in 2020, and the independent variable is the pre-post condition.
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}}
+library(brms)
+IV <- "presvote_trump_2020 + prepost + presvote_trump_2020:prepost + college"
+# Policy Politics Models
+recount   <- brms.ordinal(data = electoral_contestation, IV = IV, DV = "recount")
+summary(model_attend_march)
+```
+
+This function just estimates the model, and returns the summary of the model. The `IV` variable is the independent variable, and the `DV` variable is the dependent variable. The `IV` variable is specified as a formula, so that higher order interactions can easily be specified.
+
+### Prediction 
+
+Now, we can extract any prediction from the model, simply by declaring the `xvar` and `mvar` variables. The `xvar` variable is the independent variable, and the `mvar` variable is the moderator variable. Additional variables in the model are set to the their mean value. This part may be a little buggy, as I'm just using dichotomous predictions. You can absolutely use continuous variables here, but I've only built this to include and present the a 2x2 winner/loser interaction. Basically, this just creates a data frame of posterior means. 
+
+```{r}
+xvar = "presvote_trump_2020"
+mvar = "prepost"
+posterior_means(model = recount, mval =  c("pre", "post"), xval = c(0, 1))  -> plot_dat
+plot_dat %>% head()
+```
+There were two panels in our original paper. I've basically recreated these, but with a categorical dependent variable. I've also added the rug plot, which alongisde the point predictions and marginal effects, shows the distribution in each faceted category.
+
+### Plotting
+
+There are two main plotting functions, `ggPoint_categorical` and `ggMargins`. The `ggPoint_categorical` will plot the category point estimates, along with a rug plot. These require two datasets, the original data for the rug plot and the posterior means for the point estimates. The `ggMargins` function will plot the marginal effects, along with a rug plot. These also require two datasets, the original data for the rug plot and the posterior means for the point estimates.
+
+
+```{r}
+# plot the point predictions for all combinations, coloring the category label using ggplot
+library(ggplot2)
+library(ggExtra)
+
+ggPoint_categorical(
+  plot_dat = plot_dat,
+  raw_data_for_rug = electoral_contestation,
+  dv_col_name = "recount",
+  rug_size = 0.1,
+  rug_length = grid::unit(0.01, "npc"), # units::unit
+ ) 
+
+```
+The rug plot on the side of the plot shows the marginal distribution of the dependent variable, across the pre-post condition. 
+
+```{r}
+ggPoint_categorical(plot_dat,side_plot)
+```
+```{r}
+library(tidybayes)
+mvar = "presvote_trump_2020"
+xvar = "prepost"
+posterior_pme(model = burn_flag, 
+                         xvar = "prepost",
+                         mvar = "presvote_trump_2020",
+                         mrange =  c(0, 1),
+                         xrange =  c("pre", "post"))  %>%
+        mutate(.category = factor(.category, levels = c("1", "2", "3", "4", "5"), 
+                                  labels = c("Strongly Oppose", "Oppose", "Neutral", "Support", "Strongly Support")),
+    presvote_trump_2020 = factor(presvote_trump_2020, levels = c("0", "1"), labels = c("Trump Voter", "Biden Voter"))) -> plot_dat
+
+ggMargins_categorical() -> plot2
+```
+
+
+```{r}
+library(patchwork)
+  plot1 + plot2
+```
+
+
+
