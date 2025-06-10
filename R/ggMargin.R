@@ -69,7 +69,7 @@ ggMargins_categorical <- function(data = plot_dat,
         axis.ticks = ggplot2::element_blank(),
         strip.text.x = ggplot2::element_text(size = size_x),
         panel.grid.major = ggplot2::element_line(colour = "#D0D0D0", linewidth = 0.25), # Changed size to linewidth for ggplot2 3.4.0+
-        legend.position = "none",
+        legend.position = "bottom",
         ... # Pass additional arguments to theme
       )
     return(plot)

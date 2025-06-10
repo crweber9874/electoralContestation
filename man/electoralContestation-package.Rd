@@ -6,6 +6,15 @@
 \alias{electoralContestation-package}
 \title{electoralContestation: Replication package to accompany ""}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 This package accompanies ...
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://crweber9874.github.io/electoralContestation/}
+}
+
 }
 \keyword{internal}
