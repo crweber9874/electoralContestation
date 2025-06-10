@@ -3,3 +3,7 @@
 .Ruserdata
 .Renv
 docs
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
