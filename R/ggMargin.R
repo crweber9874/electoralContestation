@@ -23,7 +23,7 @@
 #' @param ... Additional arguments passed to `ggplot2::theme()` for further customization of plot elements.
 #' @export
 
-ggMargins_categorical <- function(data = plot_dat,
+ggMargins_categories <- function(data = plot_dat,
                                   size_x = 10,
                                   size_title = 12,
                                   title = "Marginal Effect",
