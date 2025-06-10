@@ -53,7 +53,7 @@
 #' @param ... Additional arguments passed to `ggplot2::facet_wrap()`.
 #' @return A `ggplot` object.
 #' @export
-ggPoint_categorical_t <- function(plot_dat,
+ggPoint_categorical <- function(plot_dat,
                                 raw_data_for_rug,
                                 dv_col_name = "burn_flag",
                                 facet_col_name = "presvote_trump_2020",
