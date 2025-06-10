@@ -12,7 +12,6 @@
 #'
 #' @return The data frame with recoded column
 #' #'
-#' @examples
 
 #'
 #' @export

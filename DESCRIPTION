@@ -25,3 +25,4 @@ Suggests:
   knitr,
   rmarkdown
 VignetteBuilder: knitr
+URL: https://crweber9874.github.io/electoralContestation/

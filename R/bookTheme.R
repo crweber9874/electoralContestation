@@ -1,12 +1,10 @@
 #' Common ggplot theme
 #'
-#' @param
 #'
 #' @return persistent ggplot theme
 #' @export
 #'
 #'
-#' export
 mytheme <- function(...){
   ggtheme =
     theme(

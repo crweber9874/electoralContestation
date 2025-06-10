@@ -1,0 +1,233 @@
+---
+title: "Constructing Predictive and Marginal Effects"
+output: html_document
+---
+
+If you set your own $\texttt{Sys.setenv("OPENAI_API_KEY" = "")$ you can use copilot's code completion. Otherwise, I just connect to the Dropbox folder on my computer, and read in the files, I then recode some common variables.
+
+## Sample Data: 2020 Western States
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(readstata13)
+library(haven)
+library(tidyverse)
+library(chattr)
+library(dplyr)
+devtools::load_all()
+# Sys.setenv("OPENAI_API_KEY" = "")
+# The key will not be shown in the repository, just your local .renv environment.
+setwd("/Users/Chris/Dropbox/electoral_contestation-main/Data Repository/")
+wss20 <- read.dta13("2020 WSS.dta")
+```
+
+$\bullet$ Attend march or demonstration
+$\bullet$ Burn the American flag
+$\bullet$ Contest the outcome in the courts
+$\bullet$ Support ballot recounts
+$\bullet$ Publicly criticize the integrity or fairness of the election
+
+Two questions are experimentally varied.
+
+$\bullet$ Attend march or demonstration [“even if turns violent”]
+$\bullet$ Publicly criticize the integrity or fairness of the election ["on social media"]
+
+Here's the data recode:
+
+
+```{r}
+## Code common items : Replace with new data.
+original_columns <- names(wss20)
+
+wss20 <- wss20 %>%
+  mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
+         white = ifelse(as.numeric(race) == 1, 1, 0),
+         latino = ifelse(as.numeric(race) == 3, 1, 0),
+         asian = ifelse(as.numeric(race) == 4, 1, 0),
+         american_indian = ifelse(as.numeric(race) == 5, 1, 0),
+         age = 2022 - birthyr,
+         married = ifelse(as.numeric(marstat) == 1, 1, 0),
+         college = ifelse(as.numeric(educ) >= 5, 1, 0),
+         faminc = ifelse(as.numeric(faminc_new) > 8, 1, 0),
+         survey_weight = weight,
+         caseidID = caseid,
+         state = as.character(inputstate),
+         year = 2020,
+         survey = "wss20",
+         DATE = as.Date(endtime, "%YY-%mm-%dd", tz = "MST"),
+         post_election = ifelse(DATE > "2020-11-03", 1, 0),
+         post_call = ifelse(DATE >= "2020-11-07", 1, 0),
+         uncertainty = ifelse(DATE > "2020-11-03", 1, 0),
+         prepost = ifelse(DATE > "2020-11-03", "pre", "post")
+
+  )
+
+       
+## Code Survey items
+recode_rules <- list(
+  list(column = "WSS15s", recode_rules = c(
+    "1" = "environment",
+    "2" = "police",
+    "3" = "economy",
+    "5" =  "housing",
+    "6" = "trade/foreign policy",
+    "7" = "trade/foreign policy",
+    "8" = "education",
+    "9" = "healthcare",
+    "10" = "covid",
+    "11" = "other"),  new_column = "most_important_problem"),
+  list(column = "WSS32_1", recode_rules = c("1" = 1, "2" = 0),   new_column = "polMeeting"),
+  list(column = "WSS32_2", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSign"),
+  list(column = "WSS32_3", recode_rules = c("1" = 1, "2" = 0),   new_column = "polVolunteer"),
+  list(column = "WSS32_4", recode_rules = c("1" = 1, "2" = 0),   new_column = "polProtest"),
+  list(column = "WSS32_5", recode_rules = c("1" = 1, "2" = 0),   new_column = "polOfficial"),
+  list(column = "WSS32_6", recode_rules = c("1" = 1, "2" = 0),   new_column = "polDonate"),
+  list(column = "WSS32_7", recode_rules = c("1" = 1, "2" = 0),   new_column = "polSocial"),
+  list(column = "WSS32_8", recode_rules = c("1" = 1, "2" = 0),   new_column = "polPersuade"),
+  list(column = "WSS32_9", recode_rules = c("1" = 1, "2" = 0),   new_column = "polNone"),
+  list(column = "WSS54_1", recode_rules = four_r,   new_column = "trustCongress"),
+  list(column = "WSS54_2", recode_rules = four_r,   new_column = "trustPresident"),
+  list(column = "WSS54_3", recode_rules = four_r,   new_column = "trustSC"),
+  list(column = "WSS54_4", recode_rules = four_r,   new_column = "trustGovernment"),
+  list(column = "WSS54_5", recode_rules = four_r,   new_column = "trustStateleg"),
+  list(column = "WSS54_6", recode_rules = four_r,   new_column = "trustPolice"),
+  list(column = "WSS54_7", recode_rules = four_r,   new_column = "trustScience"),
+  list(column = "WSS33_1", recode_rules = five_n,   new_column = "internal_efficacy"),
+  list(column = "WSS33_2", recode_rules = five_n,   new_column = "external_efficacy"),
+  list(column = "WSS40_1_split", recode_rules = c("1" = 1, "2" = 0),   new_column = "violent_treat"),
+  list(column = "WSS40_5_split", recode_rules = c("1" = 1, "2" = 0),   new_column = "socialmedia_treat"),
+  list(column = "WSS36_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
+  list(column = "WSS36_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
+  list(column = "WSS40_1", recode_rules = five_r,   new_column = "attend_march"),
+  list(column = "WSS40_2", recode_rules = five_r,   new_column = "criticize_election"),
+  list(column = "WSS40_3", recode_rules = five_r,   new_column = "burn_flag"),
+  list(column = "WSS40_4", recode_rules = five_r,   new_column = "recount"),
+  list(column = "WSS40_5", recode_rules = five_r,   new_column = "court"),
+  list(column = "WSS07_1a", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
+  list(column = "WSS07_1b", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_2"),
+  list(column = "WSS07_1c", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_3"),
+  list(column = "WSS07_1d", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_4"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party_identification3"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5, "6" = 6, "7" = 7), new_column = 
+         "party_identification7"),
+  list(column = "religpew", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 1,
+                                               "5"= 0, "6" = 0, "7" = 0, "8" = 0, "9" = 0, 
+                                               "10" = 0, "11" = 0, "12" = 0),   new_column =
+                                             "christian"),
+  list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
+       new_column = "ideology5"),
+  list(column = "gender", recode_rules = c("2" = 1, "1" = 0),   new_column = "female"))
+# Function to iterates  
+# Replace: devtools::load_all()
+wss20 = recodeList(wss20, recode_rules) 
+
+wss20$violent <- ifelse(wss20$WSS40_1_split == 1, wss20$attend_march, NA)
+wss20$attend_march <- ifelse(wss20$WSS40_1_split == 0, wss20$attend_march, NA)
+
+
+wss20$presvote_trump_2020 <- ifelse(wss20$WSS36_b == 9, wss20$v2, wss20$v1)
+new_columns <- names(wss20)
+new_columns <- setdiff(new_columns, original_columns)
+
+# Extract the recoded columns
+wss20$presvote_trump_2020 <- ifelse(wss20$WSS36_b == 9, wss20$v2, wss20$v1)
+wss20 <- wss20 %>% select(all_of(new_columns))
+```  
+
+There are three parts to the plots that need to be generated: The predictive effects, the marginal effects and the distributions. Using the Western States data as a test case, let's rely on a simple model to demonstrate the process.
+
+* Use `brms.ordinal`, `brms.linear` and `brms.nominal` to estimate the models. Each model comes from a different family, and the `IV` variable simply refers to the model specification. It's important to actually write it out -- this was intentional -- so that higher order interactions can easily be specified. 
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE, results = "hide"}
+library(brms)
+IV <- "presvote_trump_2020 + prepost + presvote_trump_2020:prepost"
+# Policy Politics Models
+#burn_flag   <- brms.ordinal(data = wss20, IV = IV, DV = "burn_flag")
+summary(burn_flag)
+```
+
+Now, we can extract any prediction from the model, simply by declaring the `xvar` and `mvar` variables. The `xvar` variable is the independent variable, and the `mvar` variable is the moderator variable. Additional variables in the model are set to the their mean value. More complex model predictions can be generated in the `tidybayes` framework.
+
+```{r}
+library(tidybayes)
+xvar = "presvote_trump_2020"
+mvar = "prepost"
+posterior_means(model = burn_flag, mval =  c("pre", "post"), xval = c(0, 1))  -> plot_dat
+plot_dat %>% head()
+```
+
+```{r}
+# plot the point predictions for all combinations, coloring the category label using ggplot
+library(ggplot2)
+library(ggExtra)
+side_plot <- wss20 %>%
+  # Select only the DV and faceting variable needed for the rug plot
+  dplyr::select(burn_flag, presvote_trump_2020) %>%
+  # Mutate them to factor levels and labels to match your plot_dat
+  mutate(
+    .category = jitter(as.numeric(burn_flag), amount = 0.5),
+    presvote_trump_2020 = factor(presvote_trump_2020,
+                                 levels = c("0", "1"),
+                                 labels = c("Trump Voter", "Biden Voter"))
+  ) %>%
+  # Filter out any NA values if necessary
+  drop_na(.category, presvote_trump_2020)
+
+plot_dat %>%
+  mutate(.category = factor(.category, levels = c("1", "2", "3", "4", "5"), labels = c("Strongly Disagree", "Disagree", "Neither Agree nor Disagree", "Agree", "Strongly Agree"))) %>%
+  mutate(prepost = factor(prepost, levels = c("pre", "post"))) %>%
+  mutate(presvote_trump_2020 = factor(presvote_trump_2020, levels = c("0", "1"), labels = c("Trump Voter", "Biden Voter"))) %>%
+ggplot(aes(x = .category, y = mean, ymin = lower, ymax = upper, colour = prepost)) +
+  facet_wrap(~presvote_trump_2020, nrow = 2) + 
+  # Add points for the mean estimates
+  geom_point(size = 3, position = position_dodge(width = 0.6)) +
+  # extend points from axis to points
+  geom_linerange(aes(x=.category, ymax=mean, ymin=0), size = 1.25, position = position_dodge(width = 0.6)) + 
+    #theme_bw() + 
+  ggtitle("Winner Loser Effects") +
+  #  labs(caption="2020 Western States Study")+
+  scale_y_continuous("Posterior Mean Estimate")  +
+  scale_x_discrete("")  +
+  theme(legend.position = "bottom",
+        panel.grid = element_blank(),
+        #axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_blank(),
+        axis.text=element_text(size=8),
+        axis.text.x = element_text(angle=0),
+        plot.title = element_text(color="black", size=12)) + 
+    scale_colour_manual(
+    values = c("pre" = "grey", "post" = "black")  # Color for `prepost`
+  ) +
+    geom_rug(data = side_plot, aes(x = .category, colour = "lightgrey"), inherit.aes = FALSE, sides = "b", alpha = 0.1, size = 0.3, length = unit(0.05, "npc")) + 
+  coord_flip() -> plot1
+```
+The rug plot on the side of the plot shows the marginal distribution of the dependent variable, across the pre-post condition. 
+
+```{r}
+ggPoint_categorical(plot_dat,side_plot)
+```
+```{r}
+library(tidybayes)
+mvar = "presvote_trump_2020"
+xvar = "prepost"
+posterior_pme(model = burn_flag, 
+                         xvar = "prepost",
+                         mvar = "presvote_trump_2020",
+                         mrange =  c(0, 1),
+                         xrange =  c("pre", "post"))  %>%
+        mutate(.category = factor(.category, levels = c("1", "2", "3", "4", "5"), 
+                                  labels = c("Strongly Oppose", "Oppose", "Neutral", "Support", "Strongly Support")),
+    presvote_trump_2020 = factor(presvote_trump_2020, levels = c("0", "1"), labels = c("Trump Voter", "Biden Voter"))) -> plot_dat
+
+ggMargins_categorical() -> plot2
+```
+
+
+```{r}
+library(patchwork)
+  plot1 + plot2
+```
+
+
+
