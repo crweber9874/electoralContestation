@@ -19,7 +19,8 @@ Imports:
   ggridges,
   tidyr,
   stringr,
-  ggExtra
+  ggExtra,
+  devtools
 Suggests:
   knitr,
   rmarkdown

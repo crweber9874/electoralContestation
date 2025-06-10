@@ -1,7 +1,6 @@
 # electoralContestation
 ## An R package to facilitate analysis of electoral contestation data.
 ### Updated: June 2025
-# pkgdown <img src="inst/figures/logo.png" align="right" />
 
 ## Introduction
 
