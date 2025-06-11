@@ -10,3 +10,7 @@ git push origin <your branch name, ex. master>
 #pkgdown::build_site_github_pages
 # usethis::use_pkgdown_github_pages() # auto build
 # then commit.
+
+# library(openai)
+# library(cropcircles)
+# https://gradientdescending.com/how-to-generate-a-hex-sticker-with-openai-and-cropcircles/
