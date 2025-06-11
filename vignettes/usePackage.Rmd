@@ -112,7 +112,7 @@ print(plot2)
 ```{r}
 library(patchwork)
   plot1 + plot2 + 
-  plot_layout(widths = c(2, 1))
+  plot_layout(widths = c(1, 1))
 ```
 
 
