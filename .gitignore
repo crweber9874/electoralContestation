@@ -7,3 +7,7 @@ docs
 .httr-oauth
 .DS_Store
 .quarto
+*.key
+*.pub
+buildEncryption.R
+*.rda

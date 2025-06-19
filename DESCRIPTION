@@ -23,7 +23,8 @@ Imports:
   devtools,
   tidybayes,
   brms,
-  patchwork
+  patchwork,
+  sodium
 Suggests:
   knitr,
   rmarkdown

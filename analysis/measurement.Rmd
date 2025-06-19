@@ -47,7 +47,7 @@ Respondents were asked to rate their support for each behavior on a 5-point scal
 
 ## Recoding and Scaling
 
-We rely on six data sets in this project. The **Western States Survey** conducted in both 2020 and 2024. The **Arizona Voter Project** election surveys, conducted in 2023 and 2024. And the 2022 Congressional Election Study BYU module and the 2022 Congressional Election Study ASU module.
+We rely on seven data sets in this project. The **Western States Survey** conducted in both 2020 and 2024. The **Arizona Voter Project** election surveys, conducted in 2023 and 2024. And the 2022 Congressional Election Study BYU module and the 2022 Congressional Election Study ASU module.
 
 The $\texttt{electoralContestation}$ package includes a number of helper functions to clean and recode these data. Downloading the package comes with the data $\texttt{electoral\_contestation}$. The total data size is approximately 11,000 respondents.
 
@@ -60,7 +60,7 @@ devtools::install_github("crweber9874\/electoralContestation")
 rm(list = ls())
 # Install from repository
 #devtools::install_github("crweber9874/electoralContestation")
-library(electoralContestation)
+devtools::load_all()
 library(dplyr)
 library(lavaan)
 library(ggplot2)
@@ -76,19 +76,24 @@ In structural equation modeling, full information maximum likelihood (FIML) is f
 
 Here is how this is done in lavaan. Let's just print out the output for a two factor model, and then we can look at the eigenvalues to see how many factors we should retain.
 
+
 ## Two Factor Model
 ```{r}
-fit <- suppressWarnings(efa(data = electoral_contestation[,c(
-                                                       "violent",
-                                                       "concede",
-                                                       "criticize_election",
+fit <- suppressWarnings(efa(data = electoral_contestation_wide[,c(
                                                        "attend_march",
+                                                       "criticize_election",
+                                                      # "burn_flag",
+                                                       "recount",
                                                        "court",
                                                        "recount",
+                                                       "concede_election",
+                                                       "state_legislator_certify",
+                                                       "violent_protest",
                                                        "new_election",
-                                                       "undermine",
-                                                       "state_certify",
-                                                       "certify_occupy"
+                                                       "occupy_buildings",
+                                                       "object_eligibility",
+                                                       "violent_acts"
+                                          
                                                        )],
                             nfactors = 2,
                             missing = "fiml",
@@ -99,27 +104,186 @@ summary(fit, fit.measures = TRUE, standardized = TRUE)
 
 ```
 
+```{r}
+fit <- suppressWarnings(efa(data = electoral_contestation_wide[,c(
+                                                       "attend_march",
+                                                       "criticize_election",
+                                                      # "burn_flag",
+                                                       "recount",
+                                                       "court",
+                                                       "recount",
+                                                       "concede_election",
+                                                       "state_legislator_certify",
+                                                       "violent_protest",
+                                                       "new_election",
+                                                       "occupy_buildings",
+                                                       "object_eligibility",
+                                                       "violent_acts"
+                                          
+                                                       )],
+                            nfactors = 3 ,
+                            missing = "fiml",
+                           output = "lavaan"
+           ))
+
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+```
 The two factor model fits well, and the scree plots below supports a two factor solution.
 
 ## Factor Structure
 
 ```{r}
-fit <- suppressWarnings(efa(data = electoral_contestation[,c("violent",
-                                                       "state_certify",
-                                                       "concede",
-                                                       "criticize_election",
-                                                       "attend_march",
-                                                       "court",
-                                                       "undermine",
-                                                       "recount",
-                                                       "new_election",
-                                                       "certify_occupy")],
-                            nfactors = 3,
-                            missing = "fiml",
-           ))
-                                                       
-eigenvalues = summary(fit)[[10]]$nf2[[1]]$eigvals[[1]]
+# \begin{table}[h!] % [h!] tries to place the table "here"
+# \centering
+# \caption{Electoral Contestation Behaviors} % Add a descriptive caption for your table
+# \label{tab:contestation_behaviors} % Give your table a unique label for cross-referencing
+# \small
+# % Column specification:
+# % p{8cm}: First column is a paragraph column, 8cm wide, allowing text to wrap.
+# % cc: The next two columns are center-aligned (for numeric data). You could use 'rr' for right-aligned if preferred.
+# \begin{tabular}{p{8cm} cc}
+#     \toprule % Top horizontal line
+#     \textbf{Item} & \textbf{Subversive Contestation} & \textbf{Traditional Contestation} \\
+#     \midrule % Mid-table horizontal line (below header)
+#     \textit{Attend March} & \textbf{0.570} & 0.050 \\ % 0.050 < 0.3 -> Unbolded
+#     \textit{Criticize Election} & \textbf{0.589} & \textbf{0.676} \\
+#     \textit{Recounts} & \textbf{0.838} & \textbf{-0.411} \\
+#     \textit{Contest in Court} & \textbf{0.763} & 0.167 \\ % 0.167 < 0.3 -> Unbolded
+#     \textit{Refusing to Concede the Election} & 0.039 & \textbf{1.131} \\ % 0.039 < 0.3 -> Unbolded
+#     \textit{Refuse to Certify} & 0.252 & \textbf{0.740} \\ % 0.252 < 0.3 -> Unbolded
+#     \textit{Engage in Violent Protest} & -0.004 & 0.260 \\ % -0.004 < 0.3 (already unbolded), 0.260 < 0.3 -> Unbolded
+#     \textit{Call a New Election} & \textbf{0.403} & \textbf{0.535} \\
+#     \textit{Occupy Buildings} & -0.047 & \textbf{0.672} \\ % -0.047 < 0.3 (already unbolded)
+#     \textit{Object to Voter Eligibility} & 0.186 & \textbf{0.874} \\ % 0.186 < 0.3 (already unbolded)
+#     \textit{Engage in Violent Acts} & \textbf{-0.642} & \textbf{1.763} \\
+#     \midrule % Changed \hline to \midrule for consistency with booktabs
+#     $r_{\text{Subversive, Traditional}}$ & 0.211 & \\ % Added empty cell for alignment
+#     \midrule % Changed \hline to \midrule for consistency with booktabs
+#     \textbf{Model Fit} & & \\ % Added empty cells for alignment \hline
+#     \hline
+#     Comparative Fit Index (CFI) & 0.979 & \\ % Added empty cell for alignment
+#     Tucker-Lewis Index (TLI) & 0.966 & \\ % Added empty cell for alignment
+#     RMSEA & 0.022 & \\ % Added empty cell for alignment
+#     \hline
+#     N & 14922\\
+#     \bottomrule % Bottom horizontal line
+# \end{tabular}
+# \end{table}
+# 
+# 
+# 
+# 
+# \begin{table}[h!] % [h!] tries to place the table "here"
+# \centering
+# \caption{Electoral Contestation Behaviors (One-Factor Model)} % Updated caption
+# \label{tab:contestation_behaviors_one_factor} % New label for the one-factor table
+# \small
+# % Column specification:
+# % p{8cm}: First column is a paragraph column, 8cm wide, allowing text to wrap.
+# % c: The single data column is center-aligned.
+# \begin{tabular}{p{8cm} c}
+#     \toprule % Top horizontal line
+#     \textbf{Item} & \textbf{Factor Loading} \\ % Updated header for a single factor
+#     \midrule % Mid-table horizontal line (below header)
+#     \textit{Attend March} & \textbf{0.559} \\ % Updated from f1 attend_march
+#     \textit{Criticize Election} & \textbf{0.843} \\ % Updated from f1 criticize_lctn
+#     \textit{Recounts} & \textbf{0.500} \\ % Updated from f1 recount
+#     \textit{Contest in Court} & \textbf{0.823} \\ % Updated from f1 court
+#     \textit{Refusing to Concede the Election} & \textbf{0.639} \\ % Updated from f1 concede_electn
+#     \textit{Refuse to Certify} & \textbf{0.643} \\ % Updated from f1 stt_lgsltr_crt
+#     \textit{Engage in Violent Protest} & 0.158 \\ % Updated from f1 violent_protst (0.158 < 0.3 -> Unbolded)
+#     \textit{Call a New Election} & \textbf{0.681} \\ % Updated from f1 new_election
+#     \textit{Occupy Buildings} & \textbf{0.459} \\ % Updated from f1 occupy_buldngs
+#     \textit{Object to Voter Eligibility} & \textbf{0.784} \\ % Updated from f1 object_elgblty
+#     \textit{Engage in Violent Acts} & 0.203 \\ % Updated from f1 violent_acts (0.203 < 0.3 -> Unbolded)
+#     \midrule
+#     \textbf{Model Fit} & \\ % Added empty cell for alignment \hline
+#     \hline
+#     Comparative Fit Index (CFI) & 0.660 \\ % Updated from one-factor model output
+#     Tucker-Lewis Index (TLI) & 0.575 \\ % Updated from one-factor model output
+#     RMSEA & 0.079 \\ % Updated from one-factor model output
+#     \midrule % Consistent midrule before N
+#     N & 14922 \\
+#     \bottomrule % Bottom horizontal line
+# \end{tabular}
+# \end{table}
+# 
+# 
+# \begin{table}[h!] % [h!] tries to place the table "here"
+# \centering
+# \caption{Electoral Contestation Behaviors (Three-Factor Model)} % Updated caption
+# \label{tab:contestation_behaviors_three_factor} % New label for the three-factor table
+# \small % Keeps the font size small to help fit on the page
+# % Column specification:
+# % p{8cm}: First column is a paragraph column, 8cm wide, allowing text to wrap.
+# % ccc: Three data columns, all center-aligned.
+# \begin{tabular}{p{8cm} ccc}
+#     \toprule % Top horizontal line
+#     \textbf{Item} & \textbf{Traditional} & \textbf{Subversive} & \textbf{Subversive} \\ % Updated headers for three factors
+#     \midrule % Mid-table horizontal line (below header)
+#     \textit{Attend March} & \textbf{1.284} & \textbf{-0.852} & 0.000 \\
+#     \textit{Criticize Election} & \textbf{0.646} & \textbf{0.443} & 0.014 \\
+#     \textit{Recounts} & \textbf{0.586} & -0.001 & \textbf{-0.961} \\
+#     \textit{Contest in Court} & \textbf{0.758} & 0.024 & -0.288 \\
+#     \textit{Refusing to Concede the Election} & 0.012 & \textbf{0.923} & \textbf{0.373} \\
+#     \textit{Refuse to Certify} & 0.171 & \textbf{0.666} & 0.110 \\
+#     \textit{Engage in Violent Protest} & 0.092 & 0.112 & 0.152 \\
+#     \textit{Call a New Election} & 0.240 & \textbf{0.568} & -0.056 \\
+#     \textit{Occupy Buildings} & -0.006 & \textbf{0.513} & 0.297 \\
+#     \textit{Object to Voter Eligibility} & -0.098 & \textbf{0.998} & -0.020 \\
+#     \textit{Engage in Violent Acts} & 0.002 & \textbf{0.577} & \textbf{1.208} \\
+#     \midrule
+#     \multicolumn{4}{l}{\textbf{Factor Correlations}} \\ % Heading for correlations, spanning all 4 columns
+#     \addlinespace[0.5em] % Small vertical space for readability
+#     $r_{F1, F2}$ & 0.715 & & \\ % Correlation between Factor 1 and Factor 2
+#     $r_{F1, F3}$ & 0.210 & & \\ % Correlation between Factor 1 and Factor 3
+#     \midrule
+#     \multicolumn{4}{l}{\textbf{Model Fit}} \\ % Heading for model fit, spanning all 4 columns
+#     \hline
+#     Comparative Fit Index (CFI) & 0.998 & & \\ % Updated from three-factor model output
+#     Tucker-Lewis Index (TLI) & 0.997 & & \\ % Updated from three-factor model output
+#     RMSEA & 0.007 & & \\ % Updated from three-factor model output
+#     \midrule
+#     N & 14922 & & \\ % Number of observations
+#     \bottomrule % Bottom horizontal line
+# \end{tabular}
+# \end{table}
+```
 
+
+```{r}
+fit <- suppressWarnings(efa(data = electoral_contestation_wide[,c(
+                                                       "attend_march",
+                                                       "criticize_election",
+                                                       #"burn_flag",
+                                                       "recount",
+                                                       "court",
+                                                       "recount",
+                                                       "concede_election",
+                                                       "state_legislator_certify",
+                                                       "violent_protest",
+                                                       "new_election",
+                                                       "occupy_buildings",
+                                                       "object_eligibility",
+                                                       "violent_acts"
+                                          
+                                                       )],
+                            nfactors = 1,
+                            missing = "fiml",
+                           output = "lavaan"
+           ))
+
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+
+cov_matrix = lavInspect(fit, "implied")$cov
+sd_vec <- sqrt(diag(cov_matrix))
+cor_matrix <- cov_matrix / (sd_vec %*% t(sd_vec))
+
+# Eigenvalues of the correlation matrix
+eigenvalues <- eigen(cor_matrix)$values
+eigenvalues
 eigen_df <- data.frame(
   Factor = 1:length(eigenvalues),
   Eigenvalue = eigenvalues
@@ -136,7 +300,6 @@ scree_plot <- ggplot(eigen_df, aes(x = Factor, y = Eigenvalue)) +
     y = "Eigenvalue"
   ) +
   theme_minimal() + 
-  # style a hell of lot better
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
@@ -148,9 +311,17 @@ scree_plot <- ggplot(eigen_df, aes(x = Factor, y = Eigenvalue)) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "darkgrey")
 
 scree_plot
+ggsave("scree_plot.png", width = 8, height = 8, dpi = 500)
+
 ```
 
-The two factor makes sense here -- both eigenvalues exceed the (arbitrary) cut point and the "elbow" is also at 2. Here's the fit for a confirmatory factor model, following this structure
+
+```{r}
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+The two factor makes sense here -- both eigenvalues exceed the (arbitrary) cut point and the "elbow" is also at 2. The fit is pretty terrible for the one-factor model. Here's the fit for a confirmatory factor model, following this structure
 
 ```{r}
 library(dplyr)
@@ -189,26 +360,35 @@ library(tidyr)
   # \textit{Occupy} & -0.168 & 0.741 \\
   # 
 
-electoral_contestation %>%
-  select(violent, state_certify, concede, criticize_election, 
-        attend_march, court, recount, new_election, 
-        undermine, certify_occupy) %>%
-  # rename the variables for clarity
-  rename(`Engage in Violence` = violent,
-         `Refuse to Certify` = state_certify,
-         `Refuse to Concede` = concede,
-         `Criticize Election` = criticize_election,
-         `Attend a\nMarch or Rally` = attend_march,
-         `Court` = court,
-         `Recounts` = recount,
-         `Call a New Election` = new_election,
-         `Object to Eligibility` = undermine,
-         `Occupy Buildings` = certify_occupy) %>%
-  # pivot long
-  pivot_longer(cols = everything(), names_to = "variable", values_to = "value")  %>%
+
+electoral_contestation_wide %>%  
+  select("attend_march",
+         "criticize_election",
+         "recount",
+         "court",
+         "recount",
+         "concede_election",
+         "state_legislator_certify",
+         "violent_protest",
+         "new_election",
+         "occupy_buildings",
+         "object_eligibility",
+         "violent_acts") %>%
+   rename(`Refuse to Certify` = state_legislator_certify,
+          `Refuse to Concede` = concede_election,
+          `Criticize Election` = criticize_election,
+          `Attend a\nMarch or Rally` = attend_march,
+          `Court` = court,
+          `Recounts` = recount,
+          `Call a New Election` = new_election,
+          `Object to Eligibility` = object_eligibility,
+          `Occupy Buildings` = occupy_buildings,
+          `Violent Acts` = violent_acts,
+          `Violent Protest` = violent_protest) %>%
+    pivot_longer(cols = everything(), names_to = "variable", values_to = "value")  %>%
   ggplot(aes(x = value)) +
   ggtheme + 
-    facet_wrap(~variable, ncol = 4) + 
+    facet_wrap(~variable, ncol = 3, scales = "free") + 
   geom_histogram(aes(y = ..density..), binwidth = 1, 
                  fill = "grey", color = "darkgrey",
                  alpha = 0.3) +
@@ -222,43 +402,90 @@ electoral_contestation %>%
        y = "Density")
 ggsave("electoral_contestation_histograms.png", width = 8, height = 8, dpi = 500)
 ```
+
+
 ```{r}
-library(ggplot2)
+library(vayr)
+library(estimatr)
+
+electoral_contestation_long %>%
+  mutate(contestation_clean = case_when(
+    contestation == "attend_march" ~ "Attend March",
+    contestation == "criticize_election" ~ "Criticize Election",
+    contestation == "recount" ~ "Ballot Recounts",
+    contestation == "court" ~ "Contest in Court",
+    contestation == "concede_election" ~ "Refuse to Concede",
+    contestation == "state_legislator_certify" ~ "Refuse to Certify",
+    contestation == "violent_protest" ~ "Violent Protest",
+    contestation == "new_election" ~ "Call a New Election",
+    contestation == "occupy_buildings" ~ "Occupy Buildings",
+    contestation == "object_eligibility" ~ "Object to Eligibility",
+    contestation == "violent_acts" ~ "Violent Acts" ,
+    TRUE ~ NA_character_
+  )) %>% filter(!is.na(contestation_clean))  -> electoral_contestation_long
+
+summary_df <- electoral_contestation_long |>
+  select(condition,
+         contestation_clean,
+         survey,
+         contestation_value) |>
+  group_by(survey, contestation_clean) |>
+  reframe(tidy(lm_robust(contestation_value ~ 1))) 
+
+# A df for direct labels
+label_df <- summary_df 
+
+
+  # filter(!is.na(party_identification3)) |>
+  # mutate(
+  #   electoral_contestation= case_when(
+  #     party_identification3 == 1 ~ conf.low - 0.15,
+  #     party_identification3 == 2 ~ conf.low - 0.15,
+  #     party_identification3 == 3 ~ conf.high + 0.15
+  #   ),
+  #   party_identification3 = factor(party_identification3, 
+  #                                         levels = c(1, 2, 3),
+  #                                         labels = c("Democrat", "Independent", "Republican"))
+  # )
+  # 
+ggplot(electoral_contestation_long, aes(survey, contestation_value, group = contestation_clean)) +
+      facet_wrap(~contestation_clean, nrow = 6)+ 
+  # the data
+  geom_point(position = position_circlepack(density = 6,
+                                                aspect_ratio = 0.5),
+             size = 0.001, alpha = 0.3, color = "grey") +
+  # the statistical model
+  geom_line(data = summary_df, aes(x = survey, y = estimate),  
+            position = position_dodge(width = 0.5), linewidth = 0.5, color= "black") +  
+  geom_point(data = summary_df, aes(x = survey, y = estimate),  
+             position = position_dodge(width = 0.5), size = 3, color = "black") +
+  # geom_linerange(data = summary_df, aes(x = survey, y = estimate,
+  #                                       ymin = conf.low, ymax = conf.high, color = "darkgrey"),
+  #                position = position_dodge(width = 0.5)) + 
+     theme_bw() +
+     theme(legend.position = "none",
+           strip.background = element_blank(),
+           panel.grid.minor = element_blank()) +
+  labs(title = "Electoral Contestation\nSupport for Contestation Behaviors",
+       x = "Survey",
+       y = "Contestation Behaviors (1: Strongly Oppose to\n5: Strongly Support)") +
+  scale_y_continuous(breaks = seq(1, 5, 1), limits = c(0, 6)) +
+  # rotate x axis labels 45
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ggsave("electoral_contestation_vayr.png", width = 8, height = 8, dpi = 500)
+
+
+```
+
+
+```{r}
+
 library(reshape2)
-vars = c("state_certify", "concede","criticize_election",
-         "attend_march", "court",  "recount", "new_election", 
-         "undermine", "violent", "certify_occupy") 
+cov_matrix = lavInspect(fit, "implied")$cov
+sd_vec <- sqrt(diag(cov_matrix))
+correlation_matrix <- cov_matrix / (sd_vec %*% t(sd_vec))
 
-electoral_contestation %>%
-  select(all_of(vars)) %>%
-  # deal with NA
-  cor(use = "pairwise.complete.obs")
-
-
-vars <- c("state_certify", "concede", "criticize_election", "attend_march", "court", 
-          "recount", "new_election", "undermine", "violent", "certify_occupy")
-
-library(tidyverse)
-library(reshape2)
-
-# Assuming 'electoral_contestation' is your data frame
-
-correlation_matrix <- electoral_contestation %>%
-  rename(`Engage in Violence` = violent,
-         `Refuse to Certify` = state_certify,
-         `Refuse to Concede` = concede,
-         `Criticize Election` = criticize_election,
-         `Attend March` = attend_march,
-         `Court` = court,
-         `Recounts` = recount,
-         `Call a New Election` = new_election,
-         `Object to Eligibility` = undermine,
-         `Occupy Buildings` = certify_occupy) %>%
-  select(`Engage in Violence`, `Refuse to Certify`, `Refuse to Concede`, 
-         `Criticize Election`, `Attend March`, `Court`, 
-         `Recounts`, `Call a New Election`, `Object to Eligibility`, 
-         `Occupy Buildings`) %>%
-  cor(use = "pairwise.complete.obs")
 
 # Reorder the correlation matrix using hierarchical clustering
 hc <- hclust(dist(correlation_matrix))
@@ -270,7 +497,7 @@ correlation_long <- melt(reordered_matrix)
 # Create the heatmap
 heatmap_plot <- ggplot(data = correlation_long, aes(x = Var1, y = Var2, fill = value)) +
   geom_tile() +
-  scale_fill_gradient2(low = "white", mid = "white", high = "black", 
+  scale_fill_gradient2(low = "white", mid = "white", high = "darkgrey", 
                        midpoint = 0, limit = c(-1, 1), space = "Lab", 
                        name="Pearson\nCorrelation") +
   theme_minimal() +
@@ -282,32 +509,41 @@ heatmap_plot <- ggplot(data = correlation_long, aes(x = Var1, y = Var2, fill = v
   ylab("Contestation Items")
 
 heatmap_plot
-ggsave("corr.png", width = 8, height = 8, dpi = 500)
-
+ggsave("corr.png", width = 4, height = 4)
 ```
+
+
+
+
+
+
+
+
+
 ```{r}
 library(dplyr)
 library(lavaan)
 
-electoral_contestation %>%
-  mutate(year = ifelse(survey == "wss20", 2020,
-                       ifelse(survey == "wss24", 2024,
-                              ifelse(survey == "avpw1", 2023,
-                                     ifelse(survey == "avpw2", 2024,
-                                            ifelse(survey == "cesBYU", 2022,
-                                                   ifelse(survey == "cesASU", 2022,
-                                                          NA)))))),  
-    post2022 = abs(as.numeric(year > 2022)),
-         authoritarianism = rowMeans(electoral_contestation[, c("auth_1", "auth_2",
-                                                                 "auth_3", "auth_4")], na.rm = TRUE),
-         trump_voter = ifelse(presvote_trump_2020 == 1, 1, 0),
-         trump_voter = ifelse(is.na(trump_voter), presvote_trump_2024, trump_voter),
-         trumpXauthoritarianism = trump_voter * authoritarianism
-  ) -> dat
+# electoral_contestation %>%
+#   mutate(year = ifelse(survey == "wss20", 2020,
+#                        ifelse(survey == "wss24", 2024,
+#                               ifelse(survey == "avpw1", 2023,
+#                                      ifelse(survey == "avpw2", 2024,
+#                                             ifelse(survey == "cesBYU", 2022,
+#                                                    ifelse(survey == "cesASU", 2022,
+#                                                           NA)))))),  
+#     post2022 = abs(as.numeric(year > 2022)),
+#          authoritarianism = rowMeans(electoral_contestation[, c("auth_1", "auth_2",
+#                                                                  "auth_3", "auth_4")], na.rm = TRUE),
+#          trump_voter = ifelse(presvote_trump_2020 == 1, 1, 0),
+#          trump_voter = ifelse(is.na(trump_voter), presvote_trump_2024, trump_voter),
+#          trumpXauthoritarianism = trump_voter * authoritarianism
+#   ) -> dat
 
-model <- "f1 =~ violent + state_certify + concede + criticize_election + new_election + undermine +        certify_occupy
-          f2 =~ attend_march + court + recount"
-
+model <- "f1 =~ attend_march + criticize_election + recount + court 
+          f2 =~ state_legislator_certify + concede_election + criticize_election + recount + 
+          new_election + occupy_buildings + object_eligibility + violent_acts + violent_protest
+          "
 
 # model = paste(model, 
 #               "f1 ~", "trump_voter", "\n",
@@ -316,19 +552,18 @@ model <- "f1 =~ violent + state_certify + concede + criticize_election + new_ele
 
 # Perform multiple group CFA with measurement invariance constraints
 fit_multi <- suppressWarnings(sem(model,
-                                 data = dat,
+                                 data = electoral_contestation_wide,
                                  # group = "trump_voter",
                                  # group.equal = c("loadings", "intercepts", "residuals"),
                                  missing = "fiml"))
-
-# This is somewhat clunky with fiml
-factor_scores <- lavPredict(fit_multi, method = "regression")
-factor_scores_df <- as.data.frame(factor_scores)
-factor_scores_df$row_id <- as.integer(rownames(factor_scores_df))
-# Hack by creating a row id and then join
-electoral_contestation$row_id <- 1:nrow(electoral_contestation)
-electoral_contestation_with_scores <- left_join(electoral_contestation, factor_scores_df, by = "row_id")
-electoral_contestation_fscors <- electoral_contestation_with_scores %>% select(-row_id)
+summary(fit_multi, fit.measures = TRUE, standardized = TRUE)
+# # This is somewhat clunky with fiml
+ factor_scores <- lavPredict(fit_multi, method = "regression")
+ factor_scores_df <- as.data.frame(factor_scores)
+ factor_scores_df$row_id <- as.integer(rownames(factor_scores_df))
+ electoral_contestation_wide$row_id <- 1:nrow(electoral_contestation_wide)
+ electoral_contestation_with_scores <- left_join(electoral_contestation_wide, factor_scores_df, by = "row_id")
+ electoral_contestation_fscors <- electoral_contestation_with_scores %>% select(-row_id)
 ```
 
 ```{r}
@@ -336,25 +571,23 @@ electoral_contestation_fscors <- electoral_contestation_with_scores %>% select(-
 library(brms)
 # Create a new data frame with the factor scores
 electoral_contestation_fscors %>%
-  mutate(post2022 = ifelse(year>2022, 1, 0),
-         authoritarianism = rowMeans(electoral_contestation[, c("auth_1", "auth_2",
-                                                                 "auth_3", "auth_4")], 
-                                     na.rm = TRUE),
-         trump_voter = ifelse(presvote_trump_2020 == 1, 1, 0),
-         trump_voter = ifelse(is.na(trump_voter), presvote_trump_2024, trump_voter),
-         trumpXauthoritarianism = trump_voter * authoritarianism,
-         trump_voter = as.factor(trump_voter),
-         pid = zero.one(party_identification7),
-         extremity = zero.one(abs(4-party_identification7)),
-         conservative = ifelse(ideology5 == 4 | ideology5 == 5, 1, 0),
-         liberal = ifelse(ideology5 == 1 | ideology5 == 2, 1, 0),
-         moderate = ifelse(ideology5 == 4 , 1, 0)) -> dat
-  
+  mutate(partisan = ifelse(party_identification3 != 2  & !is.na(party_identification3), "Partisan", "Independent"),
+         ideology = case_when(
+           ideology5 == 5 ~ "Conservative",
+           ideology5 == 4 ~ "Conservative",
+           ideology5 == 3 ~ "Moderate",
+           ideology5 == 2 ~ "Liberal",
+           ideology5 == 1 ~ "Liberal",
+            TRUE ~ NA
+         ),
+         extreme = ifelse(ideology5 == 1 | ideology5 == 5, 1, 0),
+         ) -> dat
+    
   
 # Fit the model
 fit_brms <- brm(
-    bf(f2 ~ trump_voter + black + latino + white + college + faminc + female + authoritarianism + post2022 + trump_voter:post2022) + 
-    bf(f1 ~ trump_voter + black + latino + white + college + faminc + female + authoritarianism + post2022 + trump_voter:post2022),  
+    bf(f2 ~ black + latino + white + faminc +ideology  + as.factor(party_identification3)) +
+    bf(f1 ~ black + latino + white +  faminc + ideology + as.factor(party_identification3)),  
   data = dat,
   family = gaussian(),
   iter = 2000,

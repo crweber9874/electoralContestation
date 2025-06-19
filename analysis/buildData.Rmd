@@ -54,11 +54,11 @@ avp23 <- avp23 %>%
          CD = as.numeric(cd),
          LD = as.numeric(LD_upper),
          zipcode = as.numeric(inputzip),
-         caseID = caseid, #By whatever is in the data,
+         caseidID = caseid, #By whatever is in the data,
          state = "4",
          year = 2023,
          survey = "avpw1",
-         prepost = "post"
+         condition = "post"
          )
 head(avp23)
 ```        
@@ -66,6 +66,7 @@ head(avp23)
 I created some functions in the package to avoid repetitive code -- particularly when recoding survey items that follow a common set of response categories.  These are in the $\texttt{/R}$ folder. Some are utilities and denoted $\texttt{util_}$. In any case, here's how I recoded the 2023 AVP data file.
 
 ```{r}
+
 recode_rules <- list(
   list(column = "presvote20post", recode_rules = c("1" = 0, "2" = 1), new_column = "presvote_trump_2020"),
   list(column = "vote_2020", recode_rules = c("1" = 1, "2" = 0), new_column = "voted2020"),
@@ -83,15 +84,15 @@ recode_rules <- list(
     "11" = "democracy",
     "12" = "other"
   ), new_column = "most_important_problem"),
-  list(column = "contestation1", recode_rules = five_r, new_column = "attend_march"),
-  list(column = "contestation2", recode_rules = five_r, new_column = "criticize_election"),
-  list(column = "contestation3", recode_rules = five_r, new_column = "burn_flag"),
-  list(column = "contestation4", recode_rules = five_r, new_column = "recount"),
-  list(column = "contestation5", recode_rules = five_r, new_column = "court"),
-  list(column = "contestation6", recode_rules = five_r, new_column = "certify"),
-  list(column = "contestation7", recode_rules = five_r, new_column = "concede"),
-  list(column = "contestation8", recode_rules = five_r, new_column = "state_certify"),
-  list(column = "contestation9", recode_rules = five_r, new_column = "violent_protest"),
+  list(column = "contestation1", recode_rules = five_r, new_column = "contestation_attend_march"),
+  list(column = "contestation2", recode_rules = five_r, new_column = "contestation_criticize_election"),
+  list(column = "contestation3", recode_rules = five_r, new_column = "contestation_burn_flag"),
+  list(column = "contestation4", recode_rules = five_r, new_column = "contestation_recount"),
+  list(column = "contestation5", recode_rules = five_r, new_column = "contestation_court"),
+  list(column = "contestation6", recode_rules = five_r, new_column = "contestation_public_official_certify"),
+  list(column = "contestation7", recode_rules = five_r, new_column = "contestation_concede_election"),
+  list(column = "contestation8", recode_rules = five_r, new_column = "contestation_state_legislator_certify"),
+  list(column = "contestation9", recode_rules = five_r, new_column = "contestation_violent_protest"),
   list(column = "contestation10", recode_rules = five_r, new_column = "new_election"),
   list(column = "steal_2020", recode_rules = five_r, new_column = "stolen_2020"),
   list(column = "free_and_fair", recode_rules = five_r, new_column = "free_fair"),
@@ -104,6 +105,8 @@ recode_rules <- list(
   list(column = "rr2", recode_rules = four_r, new_column = "rr_2"),
   list(column = "rr3", recode_rules = four_r, new_column = "rr_3"),
   list(column = "rr4", recode_rules = four_r, new_column = "rr_4"),
+  list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
+                                           "5" = 3, "6" = 3, "7" = 3),   new_column = "party_identification3"),
   list(column = "pid7", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5, "6" = 6, "7" = 7), new_column = 
          "party_identification7"),
   list(column = "religpew", recode_rules = c(
@@ -122,6 +125,23 @@ new_columns <- names(avp23)
 new_columns <- setdiff(new_columns, original_columns)
 
 avp23 <- avp23 %>% select(all_of(new_columns))
+
+
+avp23 %>%
+    pivot_longer(
+        cols = starts_with(c("contestation_" )),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>%
+   mutate(contestation = gsub("_\\d$", "", contestation),
+          condition = "wave1") -> avp23
+ 
+#save a metadata column
+avp23$metadata <- "The 2023 wave of the AVP consists of likel voters. No complex design."
+
+
 ```
 ## The 2024 AVP Data, Wave II (*n* = 803; *n$_{recontact}$* = 403)
 ### Description
@@ -177,16 +197,16 @@ recode_rules <- list(
     "14" = "guns",
     "15" = "foreign_policy",
     "16" = "other"),  new_column = "most_important_problem"),
-  list(column = "contestation1", recode_rules = five_r,   new_column = "attend_march"),
-  list(column = "contestation2", recode_rules = five_r,   new_column = "criticize_election"),
-  list(column = "contestation3", recode_rules = five_r,   new_column = "burn_flag"),
-  list(column = "contestation4", recode_rules = five_r,   new_column = "recount"),
-  list(column = "contestation5", recode_rules = five_r,   new_column = "court"),
-  list(column = "contestation6", recode_rules = five_r,   new_column = "certify"),
-  list(column = "contestation7", recode_rules = five_r,   new_column = "concede"),
-  list(column = "contestation8", recode_rules = five_r,   new_column = "state_certify"),
-  list(column = "contestation9", recode_rules = five_r,   new_column = "violent_protest"),
-  list(column = "contestation10", recode_rules = five_r,  new_column = "new_election"),
+  list(column = "contestation1", recode_rules = five_r,   new_column = "contestation_attend_march"),
+  list(column = "contestation2", recode_rules = five_r,   new_column = "contestation_criticize_election"),
+  list(column = "contestation3", recode_rules = five_r,   new_column = "contestation_burn_flag"),
+  list(column = "contestation4", recode_rules = five_r,   new_column = "contestation_recount"),
+  list(column = "contestation5", recode_rules = five_r,   new_column = "contestation_court"),
+  list(column = "contestation6", recode_rules = five_r,   new_column = "contestation_public_official_certify"),
+  list(column = "contestation7", recode_rules = five_r,   new_column = "contestation_concede_election"),
+  list(column = "contestation8", recode_rules = five_r,   new_column = "contestation_state_legislator_certify"),
+  list(column = "contestation9", recode_rules = five_r,   new_column = "contestation_violent_protest"),
+  list(column = "contestation10", recode_rules = five_r,  new_column = "contestation_new_election"),
   list(column = "auth1", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
   list(column = "auth2", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_2"),
   list(column = "auth3", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_3"),
@@ -210,6 +230,27 @@ new_columns <- setdiff(new_columns, original_columns)
 
 # Extract the recoded columns
 avp24 <- avp24 %>% select(all_of(new_columns))
+
+
+avp24 %>%
+    pivot_longer(
+        cols = starts_with(c("contestation_" )),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>%
+   mutate(contestation = gsub("_\\d$", "", contestation),
+          condition = "wave2") -> avp24
+ 
+#save a metadata column
+avp24$metadata <- "The 2023 wave of the AVP consists of likel voters. No complex design."
+
+# Join avp23 and 24
+avp <- avp23 %>%
+  bind_rows(avp24) 
+
+
 ```   
 
 ## Western States
@@ -256,8 +297,8 @@ Key findings: This is an interrupted design showing treatment effects within day
 
 
 
-```{r}
-## Code common items
+```{r, warnings = FALSE, echo = TRUE, warning = FALSE}
+
 original_columns <- names(wss20)
 
 wss20 <- wss20 %>%
@@ -276,10 +317,10 @@ wss20 <- wss20 %>%
          year = 2020,
          survey = "wss20",
          DATE = as.Date(endtime, "%YY-%mm-%dd", tz = "MST"),
-         post_election = ifelse(DATE > "2020-11-03", 1, 0),
+         post_election = ifelse(DATE >= "2020-11-03", 1, 0),
          post_call = ifelse(DATE >= "2020-11-07", 1, 0),
-         uncertainty = ifelse(DATE > "2020-11-03", 1, 0),
-         prepost = ifelse(DATE > "2020-11-03", "pre", "post")
+         uncertainty = ifelse(DATE > "2020-11-03" & DATE< "2020-11-07", 1, 0),
+         prepost = ifelse(DATE > "2020-11-03", "post", "pre")
 
   )
 
@@ -319,11 +360,11 @@ recode_rules <- list(
   list(column = "WSS40_5_split", recode_rules = c("1" = 1, "2" = 0),   new_column = "socialmedia_treat"),
   list(column = "WSS36_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
   list(column = "WSS36_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
-  list(column = "WSS40_1", recode_rules = five_r,   new_column = "attend_march"),
-  list(column = "WSS40_2", recode_rules = five_r,   new_column = "criticize_election"),
-  list(column = "WSS40_3", recode_rules = five_r,   new_column = "burn_flag"),
-  list(column = "WSS40_4", recode_rules = five_r,   new_column = "recount"),
-  list(column = "WSS40_5", recode_rules = five_r,   new_column = "court"),
+  list(column = "WSS40_1", recode_rules = five_r,   new_column = "tmp_contestation_attend_march"),
+  list(column = "WSS40_2", recode_rules = five_r,   new_column = "tmp_contestation_criticize_election"),
+  list(column = "WSS40_3", recode_rules = five_r,   new_column = "tmp_contestation_burn_flag"),
+  list(column = "WSS40_4", recode_rules = five_r,   new_column = "tmp_contestation_recount"),
+  list(column = "WSS40_5", recode_rules = five_r,   new_column = "tmp_contestation_court"),
   list(column = "WSS07_1a", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
   list(column = "WSS07_1b", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_2"),
   list(column = "WSS07_1c", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_3"),
@@ -338,24 +379,54 @@ recode_rules <- list(
                                              "christian"),
   list(column = "ideo5", recode_rules = c("1" = 1, "2" = 2, "3" = 3, "4" = 4, "5" = 5),  
        new_column = "ideology5"),
-  list(column = "gender", recode_rules = c("2" = 1, "1" = 0),   new_column = "female"))
-# Function to iterates  
-# Replace: devtools::load_all()
+  list(column = "gender", recode_rules = c("2" = 1, "1" = 0),   new_column= "female"))
 wss20 = recodeList(wss20, recode_rules) 
 
-wss20$violent_march <- ifelse(wss20$WSS40_1_split == 1, wss20$attend_march, NA)
-wss20$attend_march <-  ifelse(wss20$WSS40_1_split == 0, wss20$attend_march, NA)
+# prepare data for long pivot with missing values
+wss20 %>% 
+  mutate(contestation_attend_march_1 = ifelse(prepost =="pre", tmp_contestation_attend_march, NA),
+         contestation_criticize_election_1 = ifelse(prepost =="pre", tmp_contestation_criticize_election, NA),
+         contestation_burn_flag_1 = ifelse(prepost =="pre", tmp_contestation_burn_flag, NA),
+         contestation_recount_1 = ifelse(prepost =="pre", tmp_contestation_recount, NA),
+         contestation_court_1 = ifelse(prepost =="pre", tmp_contestation_court, NA),
+         contestation_attend_march_2 = ifelse(prepost =="post", tmp_contestation_attend_march, NA),
+         contestation_criticize_election_2 = ifelse(prepost =="post", tmp_contestation_criticize_election, NA),
+         contestation_burn_flag_2 = ifelse(prepost =="post", tmp_contestation_burn_flag, NA),
+         contestation_recount_2 = ifelse(prepost =="post", tmp_contestation_recount, NA),
+         contestation_court_2 = ifelse(prepost =="post", tmp_contestation_court, NA)) -> wss20
+         
+           
 
-wss20$criticize_election <- ifelse(wss20$WSS40_5_split == 0, wss20$criticize_election, NA)
-wss20$criticize_election_social_media <- ifelse(wss20$WSS40_1_split == 1, wss20$criticize_election, NA)
-
+# Function to iterates  
+# Replace: devtools::load_all()
 
 wss20$presvote_trump_2020 <- ifelse(wss20$WSS36_b == 9, wss20$v2, wss20$v1)
 new_columns <- names(wss20)
 new_columns <- setdiff(new_columns, original_columns)
-
+# 
 # Extract the recoded columns
 wss20 <- wss20 %>% select(all_of(new_columns))
+
+
+wss20 %>%
+    pivot_longer(
+        cols = starts_with(c("contestation_" )),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>%
+  mutate(wave = ifelse(grepl("_1$", contestation), 1, 
+                       ifelse(grepl("_2$", contestation), 2, NA))) %>%
+ 
+   mutate(contestation = gsub("_\\d$", "", contestation),
+          condition = case_when(.$wave == 1 ~ "post",
+                                .$wave == 2 ~ "pre"),
+          ) -> wss20
+ 
+#save a metadata column
+wss20$metadata <- "The 2020 WSS is a natural experiment, pre-post test design. Condition corresponds to whether the observation was collected in the pre or post election period."
+
 ```  
 
 
@@ -418,7 +489,7 @@ Finally, all of the state observations were aggregated, with results weighted by
 the proportion of the state's population within the sampling frame, to produce
 a final single aggregated weight for the final 4000 observations.
 
-```{r}
+```{r, echo = TRUE, message = FALSE, warning = FALSE}
 original_columns <- names(wss24)
 
 wss24 <- wss24 %>%
@@ -439,7 +510,7 @@ wss24 <- wss24 %>%
          WSS007_c = as.numeric(WSS007_c),
          year = 2024,
          survey = "wss24",
-         pre_post_election = ifelse(wave == 1, 1, 0),
+         prepost = ifelse(wave == 1, "post", "pre"),
          # 0 - 100
          trustPresident = as.numeric(WSS022_a)/100,
          trustCongress = as.numeric(WSS022_b)/100,
@@ -455,14 +526,14 @@ recode_rules <- list(
   list(column = "WSS009_b", recode_rules = five_n,   new_column = "external_efficacy"),
   list(column = "WSS007_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
   list(column = "WSS007_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
-  list(column = "WSS029_a", recode_rules = five_r,   new_column = "attend_march"),
-  list(column = "WSS029_b", recode_rules = five_r,   new_column = "burn_flag"),
-  list(column = "WSS029_c", recode_rules = five_r,   new_column = "court"),
-  list(column = "WSS029_d", recode_rules = five_r,   new_column = "recount"),
-  list(column = "WSS029_e", recode_rules = five_r,   new_column = "criticize_election"),
-  list(column = "WSS029_f", recode_rules = five_r,   new_column = "concede"),
-  list(column = "WSS029_g", recode_rules = five_r,   new_column = "occupy_buildings"),
-  list(column = "WSS029_h", recode_rules = five_r,   new_column = "object_eligibility"),
+  list(column = "WSS029_a", recode_rules = five_r,   new_column = "tmp_contestation_attend_march"),
+  list(column = "WSS029_b", recode_rules = five_r,   new_column = "tmp_contestation_burn_flag"),
+  list(column = "WSS029_c", recode_rules = five_r,   new_column = "tmp_contestation_court"),
+  list(column = "WSS029_d", recode_rules = five_r,   new_column = "tmp_contestation_recount"),
+  list(column = "WSS029_e", recode_rules = five_r,   new_column = "tmp_contestation_criticize_election"),
+  list(column = "WSS029_f", recode_rules = five_r,   new_column = "tmp_contestation_concede"),
+  list(column = "WSS029_g", recode_rules = five_r,   new_column = "tmp_contestation_occupy_buildings"),
+  list(column = "WSS029_h", recode_rules = five_r,   new_column = "tmp_contestation_object_eligibility"),
   list(column = "WSS013_a", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
   list(column = "WSS013_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_2"),
   list(column = "WSS013_c", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_3"),
@@ -486,12 +557,46 @@ recode_rules <- list(
 # Function to iterates  
 # Replace: devtools::load_all()
 wss24 = recodeList(wss24, recode_rules) 
+
+# prepare data for long pivot with missing values
+wss24 %>% 
+  mutate(contestation_attend_march_1 = ifelse(prepost =="pre", tmp_contestation_attend_march, NA),
+         contestation_criticize_election_1 = ifelse(prepost =="pre", tmp_contestation_criticize_election, NA),
+         contestation_burn_flag_1 = ifelse(prepost =="pre", tmp_contestation_burn_flag, NA),
+         contestation_recount_1 = ifelse(prepost =="pre", tmp_contestation_recount, NA),
+         contestation_court_1 = ifelse(prepost =="pre", tmp_contestation_court, NA),
+         contestation_attend_march_2 = ifelse(prepost =="post", tmp_contestation_attend_march, NA),
+         contestation_criticize_election_2 = ifelse(prepost =="post", tmp_contestation_criticize_election, NA),
+         contestation_burn_flag_2 = ifelse(prepost =="post", tmp_contestation_burn_flag, NA),
+         contestation_recount_2 = ifelse(prepost =="post", tmp_contestation_recount, NA),
+         contestation_court_2 = ifelse(prepost =="post", tmp_contestation_court, NA)) -> wss24
+         
+
 wss24$presvote_trump_2024 <- ifelse(is.na(wss24$v1), wss24$v2, wss24$v1)
 new_columns <- names(wss24)
 new_columns <- setdiff(new_columns, original_columns)
 
 # Extract the recoded columns
 wss24 <- wss24 %>% select(all_of(new_columns))
+
+wss24 %>%
+    pivot_longer(
+        cols = starts_with(c("contestation_" )),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>%
+  mutate(wave = ifelse(grepl("_1$", contestation), 1, 
+                       ifelse(grepl("_2$", contestation), 2, NA))) %>%
+ 
+   mutate(contestation = gsub("_\\d$", "", contestation),
+          condition = case_when(.$wave == 1 ~ "post",
+                                .$wave == 2 ~ "pre"),
+          ) -> wss24
+ 
+#save a metadata column
+wss24$metadata <- "The 2024 WSS is a natural experiment, pre-post test design. Condition corresponds to whether the observation was collected in the pre or post election period."
 ```  
 
 ## CES ASU Module
@@ -507,7 +612,8 @@ Fraud: Many people are unhappy with the outcomes of elections, especially when t
 
 Norms: The peaceful transfer of power is a foundation of American democracy. However, many people are unhappy with the outcomes of elections. How much do you support or oppose each of the following behaviors when people are unhappy with the outcome of an election? 
 
-```{r}
+```{r, warning = FALSE, echo = TRUE, message = FALSE}
+
 original_columns <- names(cesASU)
 
 cesASU <- cesASU %>%
@@ -536,33 +642,33 @@ recode_rules <- list(
   list(column = "CC22_430a_6", recode_rules = c("1" = 1, "2" = 0),   new_column = "polDonate"),
   list(column = "CC22_430a_8", recode_rules = c("1" = 1, "2" = 0),   new_column = "polNone"),
   # Pre Election
-  list(column = "ASU351", recode_rules = five_n,   new_column = "attend_march"),
-  list(column = "ASU352", recode_rules = five_n,   new_column = "burn_flag"),
-  list(column = "ASU353", recode_rules = five_n,   new_column = "court"),
-  list(column = "ASU354", recode_rules = five_n,   new_column = "recount"),
-  list(column = "ASU355", recode_rules = five_n,   new_column = "criticize_election"),
-  list(column = "ASU356", recode_rules = five_n,   new_column = "violent_acts"),
+  list(column = "ASU351", recode_rules = five_n,   new_column = "contestation_attend_march_1"),
+  list(column = "ASU352", recode_rules = five_n,   new_column = "contestation_burn_flag_1"),
+  list(column = "ASU353", recode_rules = five_n,   new_column = "contestation_court_1"),
+  list(column = "ASU354", recode_rules = five_n,   new_column = "contestation_recount_1"),
+  list(column = "ASU355", recode_rules = five_n,   new_column = "contestation_criticize_election_1"),
+  list(column = "ASU356", recode_rules = five_n,   new_column = "contestation_violent_acts_1"),
   # Control
-  list(column = "ASU412", recode_rules = five_r,   new_column = "attend_march1"),
-  list(column = "ASU413", recode_rules = five_r,   new_column = "burn_flag1"),
-  list(column = "ASU414", recode_rules = five_r,   new_column = "court1"),
-  list(column = "ASU415", recode_rules = five_r,   new_column = "recount1"),
-  list(column = "ASU416", recode_rules = five_r,   new_column = "criticize_election1"),
-  list(column = "ASU417", recode_rules = five_r,   new_column = "violent_acts1"),
+  list(column = "ASU412", recode_rules = five_r,   new_column = "contestation_attend_march_2"),
+  list(column = "ASU413", recode_rules = five_r,   new_column = "contestation_burn_flag_2"),
+  list(column = "ASU414", recode_rules = five_r,   new_column = "contestation_court_2"),
+  list(column = "ASU415", recode_rules = five_r,   new_column = "contestation_recount_2"),
+  list(column = "ASU416", recode_rules = five_r,   new_column = "contestation_criticize_election_2"),
+  list(column = "ASU417", recode_rules = five_r,   new_column = "contestation_violent_acts_2"),
   # Fraud
-  list(column = "ASU418", recode_rules = five_r,   new_column = "attend_march2"),
-  list(column = "ASU419", recode_rules = five_r,   new_column = "burn_flag2"),
-  list(column = "ASU420", recode_rules = five_r,   new_column = "court2"),
-  list(column = "ASU421", recode_rules = five_r,   new_column = "recount2"),
-  list(column = "ASU422", recode_rules = five_r,   new_column = "criticize_election2"),
-  list(column = "ASU423", recode_rules = five_r,   new_column = "violent_acts2"),
+  list(column = "ASU418", recode_rules = five_r,   new_column = "contestation_attend_march_3"),
+  list(column = "ASU419", recode_rules = five_r,   new_column = "contestation_burn_flag_3"),
+  list(column = "ASU420", recode_rules = five_r,   new_column = "contestation_court_3"),
+  list(column = "ASU421", recode_rules = five_r,   new_column = "contestation_recount_3"),
+  list(column = "ASU422", recode_rules = five_r,   new_column = "contestation_criticize_election_3"),
+  list(column = "ASU423", recode_rules = five_r,   new_column = "contestation_violent_acts_3"),
   # Norms
-  list(column = "ASU424", recode_rules = five_r,   new_column = "attend_march3"),
-  list(column = "ASU425", recode_rules = five_r,   new_column = "burn_flag3"),
-  list(column = "ASU426", recode_rules = five_r,   new_column = "court3"),
-  list(column = "ASU427", recode_rules = five_r,   new_column = "recount3"),
-  list(column = "ASU428", recode_rules = five_r,   new_column = "criticize_election3"),
-  list(column = "ASU429", recode_rules = five_r,   new_column = "violent_acts3"),
+  list(column = "ASU424", recode_rules = five_r,   new_column = "contestation_attend_march_4"),
+  list(column = "ASU425", recode_rules = five_r,   new_column = "contestation_burn_flag_4"),
+  list(column = "ASU426", recode_rules = five_r,   new_column = "contestation_court_4"),
+  list(column = "ASU427", recode_rules = five_r,   new_column = "contestation_recount_4"),
+  list(column = "ASU428", recode_rules = five_r,   new_column = "contestation_criticize_election_4"),
+  list(column = "ASU429", recode_rules = five_r,   new_column = "contestation_violent_acts_4"),
 
   list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
   list(column = "pid7", recode_rules = c("1" = 1, "2" = 1, "3" = 1, "4" = 2,
@@ -590,50 +696,39 @@ cesASU$post_experimental_condition <- ifelse(cesASU$QASU412rand == 1, "Control",
                                               NA)))
   
   
-  
-## Kind of strange coding of the conditions, combine to common variable
-cesASU = cesASU %>%
-  mutate(
-    attend_march_post = ifelse(!is.na(attend_march1), attend_march1,
-       ifelse(!is.na(attend_march2), attend_march2,
-       ifelse(!is.na(attend_march3), attend_march3,
-              NA))),
-    burn_flag_post = ifelse(!is.na(burn_flag1), burn_flag1,
-       ifelse(!is.na(burn_flag2), burn_flag2,
-       ifelse(!is.na(burn_flag3), burn_flag3,
-              NA))),
-    court_post = ifelse(!is.na(court1), court1,
-       ifelse(!is.na(court2), court2,
-       ifelse(!is.na(court3), court3,
-              NA))),
-    recount_post = ifelse(!is.na(recount1), recount1,
-       ifelse(!is.na(recount2), recount2,
-       ifelse(!is.na(recount3), recount3,
-              NA))),
-    criticize_election_post = ifelse(!is.na(criticize_election1), criticize_election1,
-       ifelse(!is.na(criticize_election2), criticize_election2,
-       ifelse(!is.na(criticize_election3), criticize_election3,
-              NA)))
-    )
 new_columns <- names(cesASU)
 new_columns <- setdiff(new_columns, original_columns)
 cesASU <- cesASU %>% select(all_of(new_columns))
-#
+
 cesASU %>%
     pivot_longer(
-        cols = starts_with(c("attend_march", "criticize_election")),
-        names_to = "week",
-        names_prefix = "EC",
-        values_to = "rank",
-        values_drop_na = TRUE
-    ) %>% View()
+        cols = starts_with("contestation_"),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>% 
+  arrange(caseidID) %>% 
+  mutate(wave = ifelse(grepl("_1$", contestation), 1, 
+                       ifelse(grepl("_2$", contestation), 2, 
+                              ifelse(grepl("_3$", contestation), 3, 
+                                     ifelse(grepl("_4$", contestation), 4, NA))))) %>%
+  mutate(contestation = gsub("_\\d$", "", contestation),
+         condition = case_when(.$wave == 1 ~ "pretest",
+                               .$wave == 2 ~ "control",
+                               .$wave == 3 ~ "fraud",
+                               .$wave == 4 ~ "norms"),
+         ) -> cesASU
+cesASU$metadata <- "The CES ASU module includes a pretest and then a post-test in which respondents are assigned a norm violation condition. This is a panel"
+
 ```  
 
 
-## CES BYU Module
+## CES BYU 2022 Module
 
 ```{r}
-# Save original column names
+
+
 original_columns <- names(cesBYU)
 
 cesBYU <- cesBYU %>%
@@ -676,24 +771,24 @@ recode_rules <- list(
                                              "7" = 5),   new_column = "external_efficacy"),
 
   # The pretest, conditions 1 and 2
-  list(column = "BYU311a", recode_rules = five_n,   new_column = "attend_march1"),
-  list(column = "BYU312a", recode_rules = five_n,   new_column = "burn_flag1"),
-  list(column = "BYU313a", recode_rules = five_n,   new_column = "court1"),
-  list(column = "BYU314a", recode_rules = five_n,   new_column = "recount1"),
-  list(column = "BYU315a", recode_rules = five_n,   new_column = "criticize_election1"),
-  list(column = "BYU316a", recode_rules = five_n,   new_column = "violent_acts1"),
-  list(column = "BYU311b", recode_rules = five_n,   new_column = "attend_march2"),
-  list(column = "BYU312b", recode_rules = five_n,   new_column = "burn_flag2"),
-  list(column = "BYU313b", recode_rules = five_n,   new_column = "court2"),
-  list(column = "BYU314b", recode_rules = five_n,   new_column = "recount2"),
-  list(column = "BYU315b", recode_rules = five_n,   new_column = "criticize_election2"),
-  list(column = "BYU316b", recode_rules = five_n,   new_column = "violent_acts2"),
+  list(column = "BYU311a", recode_rules = five_n,   new_column = "contestation_attend_march_1"),
+  list(column = "BYU312a", recode_rules = five_n,   new_column = "contestation_burn_flag_1"),
+  list(column = "BYU313a", recode_rules = five_n,   new_column = "contestation_court_1"),
+  list(column = "BYU314a", recode_rules = five_n,   new_column = "contestation_recount_1"),
+  list(column = "BYU315a", recode_rules = five_n,   new_column = "contestation_criticize_election_1"),
+  list(column = "BYU316a", recode_rules = five_n,   new_column = "contestation_violent_acts_1"),
+  list(column = "BYU311b", recode_rules = five_n,   new_column = "contestation_attend_march_2"),
+  list(column = "BYU312b", recode_rules = five_n,   new_column = "contestation_burn_flag_2"),
+  list(column = "BYU313b", recode_rules = five_n,   new_column = "contestation_court_2"),
+  list(column = "BYU314b", recode_rules = five_n,   new_column = "contestation_recount_2"),
+  list(column = "BYU315b", recode_rules = five_n,   new_column = "contestation_criticize_election_2"),
+  list(column = "BYU316b", recode_rules = five_n,   new_column = "contestation_violent_acts_2"),
   # And there is an indicator called BYU311a_rand
 # This constitutes the post test  
-  list(column = "BYU411", recode_rules = five_r,   new_column = "attend_marchp"),
-  list(column = "BYU412", recode_rules = five_r,   new_column = "burn_flagp"),
-  list(column = "BYU413", recode_rules = five_r,   new_column = "courtp"),
-  list(column = "BYU414", recode_rules = five_r,   new_column = "recountp"),
+  list(column = "BYU411", recode_rules = five_r,   new_column = "contestation_attend_march_3"),
+  list(column = "BYU412", recode_rules = five_r,   new_column = "contestation_burn_flag_3"),
+  list(column = "BYU413", recode_rules = five_r,   new_column = "contestation_court_3"),
+  list(column = "BYU414", recode_rules = five_r,   new_column = "contestation_recount_3"),
 
 # And there is another variable called BYU411_rand
 
@@ -714,41 +809,51 @@ recode_rules <- list(
        new_column = "presvote_trump_2016")
 )
 cesBYU = recodeList(cesBYU, recode_rules) 
-# Only save the newly created ones
 
-
-cesBYU %>%
-  mutate(attend_march = ifelse( experimental_condition_post == "Control", attend_march1, NA),
-         burn_flag = ifelse( experimental_condition_post == "Control", attend_march1, NA),
-         recount = ifelse( experimental_condition_post == "Control", attend_march1, NA),
-         criticize_election = ifelse( experimental_condition_post == "Control", attend_march1, NA),
-         attend_march = ifelse( experimental_condition_post == "Control", attend_march1, NA),
-         court = ifelse( experimental_condition_post == "Control", attend_march1, NA)) -> cesBYU
-         
 new_columns <- names(cesBYU)
 new_columns <- setdiff(new_columns, original_columns)
 cesBYU <- cesBYU %>% 
   select(all_of(new_columns))
-#
+
+cesBYU %>%
+    pivot_longer(
+        cols = starts_with("contestation_"),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>% 
+  arrange(caseidID) %>% 
+  mutate(wave = ifelse(grepl("_1$", contestation), 1, 
+                       ifelse(grepl("_2$", contestation), 2, 
+                              ifelse(grepl("_3$", contestation), 3, 
+                                     ifelse(grepl("_4$", contestation), 4, NA))))) %>%
+  mutate(contestation = gsub("_\\d$", "", contestation),
+         condition = case_when(.$wave == 1 ~ "support",
+                               .$wave == 2 ~ "participate",
+                               .$wave == 3 ~ "post"),
+         ) -> cesBYU
+cesBYU$metadata <- "The 2022 BYU CES module experimentally varies the pretest question wording, and then observes the post-test response is constant. This is a panel"
 ```
 
 ```{r}
+
 original_columns <- names(cesBYU24)
 
-cesBYU <- cesBYU %>%
+cesBYU24 <- cesBYU24 %>%
   mutate(black = ifelse(as.numeric(race) == 2, 1, 0),
          white = ifelse(as.numeric(race) == 1, 1, 0),
          latino = ifelse(as.numeric(race) == 3, 1, 0),
          asian = ifelse(as.numeric(race) == 4, 1, 0),
          american_indian = ifelse(as.numeric(race) == 5, 1, 0),
-         age = 2025 - birthyr,
+         age = 2024 - birthyr,
          married = ifelse(as.numeric(marstat) == 1, 1, 0),
          college = ifelse(as.numeric(educ) >= 5, 1, 0),
          faminc = ifelse(as.numeric(faminc_new) > 8 & as.numeric(faminc_new) < 100, 1, 0),
          caseidID = caseid,
          state = as.character(inputstate),
-         year = 2025,
-         survey = "cesBYU25"
+         year = 2024,
+         survey = "cesBYU24"
 
 )
 ## Code Survey items
@@ -764,22 +869,22 @@ recode_rules <- list(
   # Pre and Post questions
 
   # The pretest, conditions 1 and 2
-  list(column = "BYU400", recode_rules = five_n,   new_column = "attend_march_post"),
-  list(column = "BYU401", recode_rules = five_n,   new_column = "burn_flag_post"),
-  list(column = "BYU402", recode_rules = five_n,   new_column = "court_post"),
-  list(column = "BYU403", recode_rules = five_n,   new_column = "recount_post"),
-  list(column = "BYU404", recode_rules = five_n,   new_column = "criticize_election_post"),
-  list(column = "BYU405", recode_rules = five_n,   new_column = "concede_election_post"),
-  list(column = "BYU406", recode_rules = five_n,   new_column = "occupy_buildings_post"),
-  list(column = "BYU407", recode_rules = five_n,   new_column = "object_eligibility_post"),
-  list(column = "BYU300", recode_rules = five_n,   new_column = "attend_march_post"),
-  list(column = "BYU301", recode_rules = five_n,   new_column = "burn_flag_post"),
-  list(column = "BYU302", recode_rules = five_n,   new_column = "court_post"),
-  list(column = "BYU303", recode_rules = five_n,   new_column = "recount_post"),
-  list(column = "BYU304", recode_rules = five_n,   new_column = "criticize_election_post"),
-  list(column = "BYU305", recode_rules = five_n,   new_column = "concede_election_post"),
-  list(column = "BYU306", recode_rules = five_n,   new_column = "occupy_buildings_post"),
-  list(column = "BYU307", recode_rules = five_n,   new_column = "object_eligibility_post"),
+  list(column = "BYU400", recode_rules = five_n,   new_column = "contestation_attend_march_2"),
+  list(column = "BYU401", recode_rules = five_n,   new_column = "contestation_burn_flag_2"),
+  list(column = "BYU402", recode_rules = five_n,   new_column = "contestation_court_2"),
+  list(column = "BYU403", recode_rules = five_n,   new_column = "contestation_recount_2"),
+  list(column = "BYU404", recode_rules = five_n,   new_column = "contestation_criticize_election_2"),
+  list(column = "BYU405", recode_rules = five_n,   new_column = "contestation_concede_election_2"),
+  list(column = "BYU406", recode_rules = five_n,   new_column = "contestation_occupy_buildings_2"),
+  list(column = "BYU407", recode_rules = five_n,   new_column = "contestation_object_eligibility_2"),
+  list(column = "BYU300", recode_rules = five_n,   new_column = "contestation_attend_march_1"),
+  list(column = "BYU301", recode_rules = five_n,   new_column = "contestation_burn_flag_1"),
+  list(column = "BYU302", recode_rules = five_n,   new_column = "contestation_court_1"),
+  list(column = "BYU303", recode_rules = five_n,   new_column = "contestation_recount_1"),
+  list(column = "BYU304", recode_rules = five_n,   new_column = "contestation_criticize_election_1"),
+  list(column = "BYU305", recode_rules = five_n,   new_column = "contestation_concede_election_1"),
+  list(column = "BYU306", recode_rules = five_n,   new_column = "contestation_occupy_buildings_1"),
+  list(column = "BYU307", recode_rules = five_n,   new_column = "contestation_object_eligibility_1"),
 
   # Start here
   list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
@@ -805,17 +910,87 @@ new_columns <- names(cesBYU24)
 new_columns <- setdiff(new_columns, original_columns)
 cesBYU24 <- cesBYU24 %>% 
   select(all_of(new_columns))
+cesBYU24 %>%
+    pivot_longer(
+        cols = starts_with("contestation_"),
+        names_to = "contestation",
+        names_prefix = "contestation_",
+        values_to = "contestation_value",
+        values_drop_na = FALSE
+    ) %>% 
+  arrange(caseidID) %>% 
+  mutate(wave = ifelse(grepl("_1$", contestation), 1, 
+                       ifelse(grepl("_2$", contestation), 2, 
+                              ifelse(grepl("_3$", contestation), 3,  NA)))) %>%
+  mutate(contestation = gsub("_\\d$", "", contestation),
+         condition = case_when(.$wave == 1 ~ "pre",
+                               .$wave == 2 ~ "post")) -> cesBYU24
+
+
+cesBYU24$metadata <- "The 2024 BYU CES module is a two wave panel"
+
+
+
 ```
 
 
-
+## Construct Wide, Long Versions
 
 ```{r}
-bind_rows(avp23, avp24, wss20, wss24, cesASU, cesBYU) -> electoral_contestation
-View(electoral_contestation)
+bind_rows(avp, cesBYU24, wss20, wss24, cesASU, cesBYU) -> electoral_contestation_long
+#View(electoral_contestation_long)
 # data
-save(electoral_contestation, file = "~/Dropbox/github_repos/electoralContestation/data/electoralConstestation.rda")
-
+attr(electoral_contestation_long, "title") <- "Electoral Contestation Joined Data, Long Format"
+attr(electoral_contestation_long, "description") <- "These data come from seven datasets, two Western States cross sections, a panel data of likely voters in Arizona, and three CES modules funded by BYU and ASU, two from 2022 and one from 2024."
+attr(electoral_contestation_long, "source") <- "Western States (2 cross sections), Arizona Voter Project (2 waves), CES ASU 2022, CES BYU 2022, CES BYU 2024"
+attr(electoral_contestation_long, "note") <- "These data should be used with caution due to varying survey designs.."
+save(electoral_contestation_long, file = "~/Dropbox/github_repos/electoralContestation/data/electoralConstestationLong.rda")
 ```
+
+```{r}
+electoral_contestation_long %>%
+  select(caseidID, caseidID22, year, survey, wave, condition, contestation, contestation_value, metadata,
+         party_identification3, christian, ideology5, survey_weight, black,
+         white, latino, age, american_indian, asian, faminc) %>%
+  mutate(ID = ifelse(survey == "avpw2" & !is.na(caseidID22), caseidID22, caseidID),
+         survey_condition = paste0(survey, "_", condition)) %>%
+  pivot_wider(
+    names_from = contestation,
+    values_from = contestation_value,
+    values_fill = NA
+  ) -> electoral_contestation_wide
+
+attr(electoral_contestation_wide, "title") <- "Electoral Contestation Joined Data, Wide Format"
+attr(electoral_contestation_wide, "description") <- "These data come from seven datasets, two Western States cross sections, a panel data of likely voters in Arizona, and three CES modules funded by BYU and ASU, two from 2022 and one from 2024."
+attr(electoral_contestation_wide, "source") <- "Constructed from electoral_contestat_long"
+attr(electoral_contestation_wide, "note") <- "These data should be used with caution due to varying survey designs.."
+
+save(electoral_contestation_wide, file = "~/Dropbox/github_repos/electoralContestation/data/electoralConstestationWide.rda")
+```
+## Construct Panel
+
+```{r}
+library(dplyr)
+# Construct BYU Panel
+wave1 <- electoral_contestation_wide %>%
+    filter(survey == "avpw1") %>%
+    rename_with(~ paste0("w1_", .), -ID)
+
+wave2 <- electoral_contestation_wide %>%
+    filter(survey == "avpw2") %>%
+    rename_with(~ paste0("w2_", .), -ID)
+
+avp_panel = inner_join(wave1, wave2, by = "ID")
+# Add metadata to arizonaVoter
+attr(avp_panel, "title") <- "Arizona Voter Panel Dataset"
+attr(avp_panel, "description") <- "Panel dataset merging Wave 1 and Wave 2 of the Arizona Voter Project."
+attr(avp_panel, "source") <- "Constructed from electoral_contestation_wide"
+attr(avp_panel, "note") <- "Variables prefixed with 'w1_' and 'w2_' indicate the survey wave."
+
+# Optionally assign it to arizonaVoter before saving
+arizonaVoter <- avp_panel
+save(arizonaVoter, file = "~/Dropbox/github_repos/electoralContestation/data/arizonaVoter.rda")
+```
+
 
 
