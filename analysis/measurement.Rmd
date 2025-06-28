@@ -82,7 +82,7 @@ Here is how this is done in lavaan. Let's just print out the output for a two fa
 fit <- suppressWarnings(efa(data = electoral_contestation_wide[,c(
                                                        "attend_march",
                                                        "criticize_election",
-                                                      # "burn_flag",
+                                                       "burn_flag",
                                                        "recount",
                                                        "court",
                                                        "recount",
@@ -108,7 +108,7 @@ summary(fit, fit.measures = TRUE, standardized = TRUE)
 fit <- suppressWarnings(efa(data = electoral_contestation_wide[,c(
                                                        "attend_march",
                                                        "criticize_election",
-                                                      # "burn_flag",
+                                                       "burn_flag",
                                                        "recount",
                                                        "court",
                                                        "recount",
@@ -256,7 +256,7 @@ The two factor model fits well, and the scree plots below supports a two factor 
 fit <- suppressWarnings(efa(data = electoral_contestation_wide[,c(
                                                        "attend_march",
                                                        "criticize_election",
-                                                       #"burn_flag",
+                                                       "burn_flag",
                                                        "recount",
                                                        "court",
                                                        "recount",
@@ -364,6 +364,7 @@ library(tidyr)
 electoral_contestation_wide %>%  
   select("attend_march",
          "criticize_election",
+         "burn_flag",
          "recount",
          "court",
          "recount",
