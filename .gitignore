@@ -11,3 +11,4 @@ docs
 *.pub
 buildEncryption.R
 *.rda
+.enc

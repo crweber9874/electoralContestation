@@ -586,7 +586,7 @@ electoral_contestation_fscors %>%
   
 # Fit the model
 fit_brms <- brm(
-    bf(f2 ~ black + latino + white + faminc +ideology  + as.factor(party_identification3)) +
+    bf(f2 ~ black + latino + white + faminc  + ideology   + as.factor(party_identification3)) +
     bf(f1 ~ black + latino + white +  faminc + ideology + as.factor(party_identification3)),  
   data = dat,
   family = gaussian(),

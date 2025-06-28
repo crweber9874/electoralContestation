@@ -526,14 +526,16 @@ recode_rules <- list(
   list(column = "WSS009_b", recode_rules = five_n,   new_column = "external_efficacy"),
   list(column = "WSS007_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "v1"),
   list(column = "WSS007_c", recode_rules = c("1" = 1, "2" = 0),   new_column = "v2"),
-  list(column = "WSS029_a", recode_rules = five_r,   new_column = "tmp_contestation_attend_march"),
-  list(column = "WSS029_b", recode_rules = five_r,   new_column = "tmp_contestation_burn_flag"),
-  list(column = "WSS029_c", recode_rules = five_r,   new_column = "tmp_contestation_court"),
-  list(column = "WSS029_d", recode_rules = five_r,   new_column = "tmp_contestation_recount"),
-  list(column = "WSS029_e", recode_rules = five_r,   new_column = "tmp_contestation_criticize_election"),
-  list(column = "WSS029_f", recode_rules = five_r,   new_column = "tmp_contestation_concede"),
-  list(column = "WSS029_g", recode_rules = five_r,   new_column = "tmp_contestation_occupy_buildings"),
-  list(column = "WSS029_h", recode_rules = five_r,   new_column = "tmp_contestation_object_eligibility"),
+  
+  
+  list(column = "WSS029_a", recode_rules = five_r,   new_column = "contestation_attend_march_1"),
+  list(column = "WSS029_b", recode_rules = five_r,   new_column = "contestation_burn_flag_1"),
+  list(column = "WSS029_c", recode_rules = five_r,   new_column = "contestation_court_1"),
+  list(column = "WSS029_d", recode_rules = five_r,   new_column = "contestation_recount_1"),
+  list(column = "WSS029_e", recode_rules = five_r,   new_column = "contestation_criticize_election_1"),
+  list(column = "WSS029_f", recode_rules = five_r,   new_column = "contestation_concede_1"),
+  list(column = "WSS029_g", recode_rules = five_r,   new_column = "contestation_occupy_buildings_1"),
+  list(column = "WSS029_h", recode_rules = five_r,   new_column = "contestation_object_eligibility_1"),
   list(column = "WSS013_a", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_1"),
   list(column = "WSS013_b", recode_rules = c("1" = 1, "2" = 0),   new_column = "auth_2"),
   list(column = "WSS013_c", recode_rules = c("1" = 0, "2" = 1),   new_column = "auth_3"),
@@ -560,16 +562,16 @@ wss24 = recodeList(wss24, recode_rules)
 
 # prepare data for long pivot with missing values
 wss24 %>% 
-  mutate(contestation_attend_march_1 = ifelse(prepost =="pre", tmp_contestation_attend_march, NA),
-         contestation_criticize_election_1 = ifelse(prepost =="pre", tmp_contestation_criticize_election, NA),
-         contestation_burn_flag_1 = ifelse(prepost =="pre", tmp_contestation_burn_flag, NA),
-         contestation_recount_1 = ifelse(prepost =="pre", tmp_contestation_recount, NA),
-         contestation_court_1 = ifelse(prepost =="pre", tmp_contestation_court, NA),
-         contestation_attend_march_2 = ifelse(prepost =="post", tmp_contestation_attend_march, NA),
-         contestation_criticize_election_2 = ifelse(prepost =="post", tmp_contestation_criticize_election, NA),
-         contestation_burn_flag_2 = ifelse(prepost =="post", tmp_contestation_burn_flag, NA),
-         contestation_recount_2 = ifelse(prepost =="post", tmp_contestation_recount, NA),
-         contestation_court_2 = ifelse(prepost =="post", tmp_contestation_court, NA)) -> wss24
+  mutate(contestation_attend_march_1 = ifelse(prepost =="pre", contestation_attend_march_1, NA),
+         contestation_criticize_election_1 = ifelse(prepost =="pre", contestation_criticize_election_1, NA),
+         contestation_burn_flag_1 = ifelse(prepost =="pre", contestation_burn_flag_1, NA),
+         contestation_recount_1 = ifelse(prepost =="pre", contestation_recount_1, NA),
+         contestation_court_1 = ifelse(prepost =="pre", contestation_court_1, NA),
+         contestation_attend_march_2 = ifelse(prepost =="post", contestation_attend_march_1, NA),
+         contestation_criticize_election_2 = ifelse(prepost =="post", contestation_criticize_election_1, NA),
+         contestation_burn_flag_2 = ifelse(prepost =="post", contestation_burn_flag_1, NA),
+         contestation_recount_2 = ifelse(prepost =="post", contestation_recount_1, NA),
+         contestation_court_2 = ifelse(prepost =="post", contestation_court_1, NA)) -> wss24
          
 
 wss24$presvote_trump_2024 <- ifelse(is.na(wss24$v1), wss24$v2, wss24$v1)
@@ -869,22 +871,22 @@ recode_rules <- list(
   # Pre and Post questions
 
   # The pretest, conditions 1 and 2
-  list(column = "BYU400", recode_rules = five_n,   new_column = "contestation_attend_march_2"),
-  list(column = "BYU401", recode_rules = five_n,   new_column = "contestation_burn_flag_2"),
-  list(column = "BYU402", recode_rules = five_n,   new_column = "contestation_court_2"),
-  list(column = "BYU403", recode_rules = five_n,   new_column = "contestation_recount_2"),
-  list(column = "BYU404", recode_rules = five_n,   new_column = "contestation_criticize_election_2"),
-  list(column = "BYU405", recode_rules = five_n,   new_column = "contestation_concede_election_2"),
-  list(column = "BYU406", recode_rules = five_n,   new_column = "contestation_occupy_buildings_2"),
-  list(column = "BYU407", recode_rules = five_n,   new_column = "contestation_object_eligibility_2"),
-  list(column = "BYU300", recode_rules = five_n,   new_column = "contestation_attend_march_1"),
-  list(column = "BYU301", recode_rules = five_n,   new_column = "contestation_burn_flag_1"),
-  list(column = "BYU302", recode_rules = five_n,   new_column = "contestation_court_1"),
-  list(column = "BYU303", recode_rules = five_n,   new_column = "contestation_recount_1"),
-  list(column = "BYU304", recode_rules = five_n,   new_column = "contestation_criticize_election_1"),
-  list(column = "BYU305", recode_rules = five_n,   new_column = "contestation_concede_election_1"),
-  list(column = "BYU306", recode_rules = five_n,   new_column = "contestation_occupy_buildings_1"),
-  list(column = "BYU307", recode_rules = five_n,   new_column = "contestation_object_eligibility_1"),
+  list(column = "BYU400", recode_rules = five_r,   new_column = "contestation_attend_march_2"),
+  list(column = "BYU401", recode_rules = five_r,   new_column = "contestation_burn_flag_2"),
+  list(column = "BYU402", recode_rules = five_r,   new_column = "contestation_court_2"),
+  list(column = "BYU403", recode_rules = five_r,   new_column = "contestation_recount_2"),
+  list(column = "BYU404", recode_rules = five_r,   new_column = "contestation_criticize_election_2"),
+  list(column = "BYU405", recode_rules = five_r,   new_column = "contestation_concede_election_2"),
+  list(column = "BYU406", recode_rules = five_r,   new_column = "contestation_occupy_buildings_2"),
+  list(column = "BYU407", recode_rules = five_r,   new_column = "contestation_object_eligibility_2"),
+  list(column = "BYU300", recode_rules = five_r,   new_column = "contestation_attend_march_1"),
+  list(column = "BYU301", recode_rules = five_r,   new_column = "contestation_burn_flag_1"),
+  list(column = "BYU302", recode_rules = five_r,   new_column = "contestation_court_1"),
+  list(column = "BYU303", recode_rules = five_r,   new_column = "contestation_recount_1"),
+  list(column = "BYU304", recode_rules = five_r,   new_column = "contestation_criticize_election_1"),
+  list(column = "BYU305", recode_rules = five_r,   new_column = "contestation_concede_election_1"),
+  list(column = "BYU306", recode_rules = five_r,   new_column = "contestation_occupy_buildings_1"),
+  list(column = "BYU307", recode_rules = five_r,   new_column = "contestation_object_eligibility_1"),
 
   # Start here
   list(column = "gender4", recode_rules = c("1" = 0, "2" = 1),   new_column = "female"),
@@ -948,10 +950,16 @@ save(electoral_contestation_long, file = "~/Dropbox/github_repos/electoralContes
 ```
 
 ```{r}
-electoral_contestation_long %>%
-  select(caseidID, caseidID22, year, survey, wave, condition, contestation, contestation_value, metadata,
-         party_identification3, christian, ideology5, survey_weight, black,
-         white, latino, age, american_indian, asian, faminc) %>%
+electoral_contestation_long %>% select(caseidID, caseidID22, year, survey, wave, condition, 
+          contestation, contestation_value, metadata,
+          party_identification3, christian, ideology5, survey_weight, black,
+          white, latino, age, american_indian, asian, faminc, married, female, 
+          college, presvote_trump_2020, voted2020, presvote_trump_2016,
+          auth_1, auth_2, auth_3, auth_4, 
+          rr_1, rr_2, rr_3, rr_4,
+          prepost, polMeeting, polSign, polVolunteer, polProtest,
+          polOfficial, polDonate, polNone, 
+          DATE ) %>%
   mutate(ID = ifelse(survey == "avpw2" & !is.na(caseidID22), caseidID22, caseidID),
          survey_condition = paste0(survey, "_", condition)) %>%
   pivot_wider(
@@ -959,7 +967,6 @@ electoral_contestation_long %>%
     values_from = contestation_value,
     values_fill = NA
   ) -> electoral_contestation_wide
-
 attr(electoral_contestation_wide, "title") <- "Electoral Contestation Joined Data, Wide Format"
 attr(electoral_contestation_wide, "description") <- "These data come from seven datasets, two Western States cross sections, a panel data of likely voters in Arizona, and three CES modules funded by BYU and ASU, two from 2022 and one from 2024."
 attr(electoral_contestation_wide, "source") <- "Constructed from electoral_contestat_long"
